@@ -101,6 +101,96 @@
     .norm-icon { font-size: 1.2rem; }
     .norm-title { font-size: 0.875rem; font-weight: 600; }
     .norm-desc { font-size: 0.78rem; color: var(--clr-text-muted); }
+    .hero-layout {
+      display: flex;
+      align-items: center;
+      gap: 3rem;
+      position: relative;
+      z-index: 1;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .hero-mascot-container {
+      flex: 0 0 35%;
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+    }
+    .hero-mascot {
+      width: 100%;
+      max-width: 320px;
+      height: auto;
+      filter: drop-shadow(0 15px 25px rgba(0,0,0,0.3));
+      animation: float 4s ease-in-out infinite;
+      cursor: pointer;
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .hero-mascot:hover {
+      transform: scale(1.05) rotate(-3deg);
+    }
+    .hero-mascot.bounce {
+      animation: bounce 0.5s;
+    }
+    .mascot-tooltip {
+      position: absolute;
+      top: -40px;
+      right: -20px;
+      background: var(--clr-bg-card);
+      border: 2px solid var(--clr-primary);
+      padding: 15px 20px;
+      border-radius: 20px;
+      border-bottom-left-radius: 0;
+      color: var(--clr-text);
+      font-weight: 600;
+      font-size: 0.95rem;
+      box-shadow: 0 10px 25px rgba(99,102,241,0.25);
+      opacity: 0;
+      transform: translateY(10px) scale(0.9);
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      pointer-events: none;
+      z-index: 10;
+      max-width: 250px;
+      text-align: center;
+    }
+    .mascot-tooltip.show {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+    .mascot-tooltip::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 20px;
+      border-width: 10px 10px 0 0;
+      border-style: solid;
+      border-color: var(--clr-primary) transparent transparent transparent;
+    }
+    .hero-content {
+      flex: 1;
+    }
+    @media (max-width: 900px) {
+      .hero-layout {
+        flex-direction: column-reverse;
+        text-align: center;
+        gap: 1rem;
+      }
+      .hero-cta { justify-content: center; }
+      .hero-mascot-container { flex: 0 0 auto; width: 100%; margin-top: 2rem; }
+      .hero-mascot { max-width: 220px; }
+      .mascot-tooltip { top: -60px; right: 50%; transform: translateX(50%) translateY(10px) scale(0.9); border-radius: 20px; border-bottom-right-radius: 0; }
+      .mascot-tooltip.show { transform: translateX(50%) translateY(0) scale(1); }
+      .mascot-tooltip::after { left: auto; right: 20px; border-width: 10px 0 0 10px; }
+    }
+    @keyframes float {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-15px); }
+      100% { transform: translateY(0px); }
+    }
+    @keyframes bounce {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1) translateY(-20px); }
+    }
   </style>
 </head>
 <body>
@@ -112,21 +202,34 @@
     <!-- HERO -->
     <section class="hero-section">
       <div class="hero-bg"></div>
-      <div class="hero-content">
-        <div class="hero-badge">⚡ Consultoría Carranza E.I.R.L. — Versión 1.0 · 2026</div>
-        <h1 class="hero-title">
-          Sistema Integrado<br>de <span>Gestión y Análisis</span><br>de Riesgos Laborales
-        </h1>
-        <p class="hero-sub">
-          Evalúa los riesgos ergonómicos posturales (REBA y RULA) y los factores psicosociales del trabajador. Conforme a la <strong>RM 375-2008-TR</strong> y la <strong>Ley N.° 29783</strong> del marco SST peruano.
-        </p>
-        <div class="hero-cta">
-          <a href="pages/identificacion.html" class="btn btn-primary btn-lg">
-            ▶ Iniciar Evaluación
-          </a>
-          <a href="pages/dashboard.html" class="btn btn-secondary btn-lg">
-            📊 Ver Resultados
-          </a>
+      <div class="hero-layout">
+        
+        <!-- Mascota Interactiva (Izquierda) -->
+        <div class="hero-mascot-container fade-in">
+          <div class="mascot-tooltip" id="mascot-tooltip">
+            ¡Hola! Soy tu asistente ergonómico. ¿Listo para evaluar? 🦙
+          </div>
+          <!-- IMPORTANTE: El usuario debe guardar su imagen en 'img/mascota.png' -->
+          <img src="img/mascota.png" alt="Mascota Ergonómica" class="hero-mascot" id="mascot-img">
+        </div>
+
+        <!-- Contenido (Derecha) -->
+        <div class="hero-content">
+          <div class="hero-badge">⚡ Consultoría Carranza E.I.R.L. — Versión 1.0 · 2026</div>
+          <h1 class="hero-title">
+            Sistema Integrado<br>de <span>Gestión y Análisis</span><br>de Riesgos Laborales
+          </h1>
+          <p class="hero-sub">
+            Evalúa los riesgos ergonómicos posturales (REBA y RULA) y los factores psicosociales del trabajador. Conforme a la <strong>RM 375-2008-TR</strong> y la <strong>Ley N.° 29783</strong> del marco SST peruano.
+          </p>
+          <div class="hero-cta">
+            <a href="pages/identificacion.html" class="btn btn-primary btn-lg mascot-trigger" data-msg="¡Excelente! Empecemos por identificar al trabajador. 📝">
+              ▶ Iniciar Evaluación
+            </a>
+            <a href="pages/dashboard.html" class="btn btn-secondary btn-lg mascot-trigger" data-msg="¡Vamos a ver los resultados y gráficas! 📊">
+              📊 Ver Resultados
+            </a>
+          </div>
         </div>
       </div>
     </section>
@@ -257,6 +360,60 @@
     const d = document.getElementById('status-dashboard');
     if (d) { d.className = 'module-status done'; d.textContent = '✅ Ver resultados'; }
   }
+  // Interacción de la Mascota
+  const mascotImg = document.getElementById('mascot-img');
+  const mascotTooltip = document.getElementById('mascot-tooltip');
+  const triggers = document.querySelectorAll('.mascot-trigger, .module-card');
+  let tooltipTimeout;
+
+  const showMascotMessage = (msg, duration = 3000) => {
+    mascotTooltip.textContent = msg;
+    mascotTooltip.classList.add('show');
+    clearTimeout(tooltipTimeout);
+    if (duration > 0) {
+      tooltipTimeout = setTimeout(() => {
+        mascotTooltip.classList.remove('show');
+      }, duration);
+    }
+  };
+
+  // Mostrar mensaje inicial tras un breve delay
+  setTimeout(() => showMascotMessage("¡Hola! Soy tu asistente en SST. ¿Listo para evaluar? 🦙", 4000), 1000);
+
+  // Click en la mascota hace que salte
+  mascotImg.addEventListener('click', () => {
+    mascotImg.classList.remove('bounce');
+    void mascotImg.offsetWidth; // Trigger reflow
+    mascotImg.classList.add('bounce');
+    
+    const frases = [
+      "¡La postura es importante!",
+      "Recuerda hacer pausas activas.",
+      "¡Cuidemos la espalda!",
+      "¡Yo te ayudo con los cálculos!"
+    ];
+    showMascotMessage(frases[Math.floor(Math.random() * frases.length)], 3000);
+  });
+
+  // Hover en botones o tarjetas
+  triggers.forEach(trigger => {
+    trigger.addEventListener('mouseenter', () => {
+      let msg = trigger.getAttribute('data-msg');
+      if (!msg) {
+        // Mensajes por defecto para las tarjetas de módulos
+        if (trigger.href.includes('identificacion')) msg = "Paso 1: Datos del trabajador y puesto.";
+        else if (trigger.href.includes('reba')) msg = "Paso 2: Evaluemos el cuerpo entero.";
+        else if (trigger.href.includes('rula')) msg = "Paso 3: Evaluemos los brazos y muñecas.";
+        else if (trigger.href.includes('psicosocial')) msg = "Paso 4: Evaluemos la carga mental y estrés.";
+        else if (trigger.href.includes('dashboard')) msg = "Paso 5: Revisemos los informes finales.";
+      }
+      if (msg) showMascotMessage(msg, 0);
+    });
+    
+    trigger.addEventListener('mouseleave', () => {
+      mascotTooltip.classList.remove('show');
+    });
+  });
 </script>
 </body>
 </html>
