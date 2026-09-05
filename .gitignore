@@ -1,0 +1,12 @@
+# Archivos de referencia/documentación grandes (no necesarios para el web)
+*.pptx
+*.docx
+*.pdf
+
+# Carpeta de configuración de editor
+.cursor/
+.mcp.json
+
+# Sistema operativo
+.DS_Store
+Thumbs.db

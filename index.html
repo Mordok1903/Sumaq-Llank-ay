@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SIGA — Sistema de Evaluación de Riesgos Laborales</title>
+  <meta name="description" content="Sistema Integrado de Gestión y Análisis de Riesgos Ergonómicos y Psicosociales. Evaluación REBA, RULA y Factores Psicosociales conforme RM 375-2008-TR.">
+  <link rel="stylesheet" href="css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="js/app.js" defer></script>
+  <style>
+    .hero-section {
+      min-height: 60vh;
+      display: flex; flex-direction: column;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-bg {
+      position: absolute; inset: 0; z-index: 0;
+      background: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(99,102,241,0.15) 0%, transparent 70%),
+                  radial-gradient(ellipse 60% 40% at 80% 60%, rgba(34,211,238,0.08) 0%, transparent 60%);
+    }
+    .hero-content { position: relative; z-index: 1; }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(99,102,241,0.15);
+      border: 1px solid rgba(99,102,241,0.3);
+      border-radius: 999px;
+      padding: 6px 16px;
+      font-size: 0.8rem; font-weight: 600;
+      color: var(--clr-primary-light);
+      margin-bottom: 1.5rem;
+      animation: fadeInUp 0.6s ease both;
+    }
+    .hero-title {
+      font-size: clamp(2.5rem, 5vw, 4rem);
+      font-weight: 900;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      margin-bottom: 1.25rem;
+      animation: fadeInUp 0.6s ease 0.1s both;
+    }
+    .hero-title span {
+      background: linear-gradient(135deg, var(--clr-cyan) 0%, var(--clr-primary-light) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-sub {
+      font-size: 1.15rem; color: var(--clr-text-secondary);
+      max-width: 560px; line-height: 1.7;
+      margin-bottom: 2rem;
+      animation: fadeInUp 0.6s ease 0.2s both;
+    }
+    .hero-cta {
+      display: flex; gap: 1rem; flex-wrap: wrap;
+      animation: fadeInUp 0.6s ease 0.3s both;
+    }
+    .module-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 2rem;
+    }
+    .module-card {
+      background: var(--clr-bg-card);
+      border: 1px solid var(--clr-border);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      display: block;
+      position: relative;
+      overflow: hidden;
+    }
+    .module-card::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, transparent 60%, rgba(99,102,241,0.05));
+      pointer-events: none;
+    }
+    .module-card:hover {
+      border-color: var(--clr-primary);
+      transform: translateY(-3px);
+      box-shadow: 0 12px 36px rgba(99,102,241,0.15);
+    }
+    .module-emoji { font-size: 2rem; margin-bottom: 0.75rem; }
+    .module-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 0.25rem; }
+    .module-desc { font-size: 0.82rem; color: var(--clr-text-muted); line-height: 1.5; }
+    .module-status {
+      margin-top: 0.875rem;
+      display: flex; align-items: center; gap: 0.5rem;
+      font-size: 0.75rem; font-weight: 600;
+    }
+    .module-status.done { color: var(--clr-safe); }
+    .module-status.pending { color: var(--clr-warn); }
+    .module-status.locked { color: var(--clr-text-muted); }
+    .norm-row { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 0; border-bottom: 1px solid var(--clr-border); }
+    .norm-row:last-child { border-bottom: none; }
+    .norm-icon { font-size: 1.2rem; }
+    .norm-title { font-size: 0.875rem; font-weight: 600; }
+    .norm-desc { font-size: 0.78rem; color: var(--clr-text-muted); }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <!-- Sidebar renderizado por JS -->
+  <div id="sidebar-root"></div>
+
+  <main class="main-content">
+    <!-- HERO -->
+    <section class="hero-section">
+      <div class="hero-bg"></div>
+      <div class="hero-content">
+        <div class="hero-badge">⚡ Consultoría Carranza E.I.R.L. — Versión 1.0 · 2026</div>
+        <h1 class="hero-title">
+          Sistema Integrado<br>de <span>Gestión y Análisis</span><br>de Riesgos Laborales
+        </h1>
+        <p class="hero-sub">
+          Evalúa los riesgos ergonómicos posturales (REBA y RULA) y los factores psicosociales del trabajador. Conforme a la <strong>RM 375-2008-TR</strong> y la <strong>Ley N.° 29783</strong> del marco SST peruano.
+        </p>
+        <div class="hero-cta">
+          <a href="pages/identificacion.html" class="btn btn-primary btn-lg">
+            ▶ Iniciar Evaluación
+          </a>
+          <a href="pages/dashboard.html" class="btn btn-secondary btn-lg">
+            📊 Ver Resultados
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- MÓDULOS -->
+    <section style="margin-top: 2.5rem;">
+      <div class="page-header">
+        <p class="page-tag">📋 Módulos del sistema</p>
+        <h2 style="font-size:1.75rem; font-weight:800; margin-bottom:0.5rem;">Completa los módulos en orden</h2>
+        <p style="color:var(--clr-text-secondary); font-size:0.9rem;">Puedes guardar el progreso en cualquier momento con <kbd>Ctrl+S</kbd></p>
+      </div>
+
+      <div class="module-grid" id="module-grid">
+        <a href="pages/identificacion.html" class="module-card fade-in">
+          <div class="module-emoji">👤</div>
+          <div class="module-title">Módulo 1 — Identificación</div>
+          <div class="module-desc">Datos del trabajador, empresa, tarea evaluada y monitorista responsable.</div>
+          <div class="module-status pending" id="status-identificacion">⭕ Pendiente</div>
+        </a>
+        <a href="pages/reba.html" class="module-card fade-in fade-in-delay-1">
+          <div class="module-emoji">🏋️</div>
+          <div class="module-title">Módulo 2 — REBA</div>
+          <div class="module-desc">Evaluación rápida del cuerpo entero. Tronco, cuello, piernas, carga y agarre.</div>
+          <div class="module-status pending" id="status-reba">⭕ Pendiente</div>
+        </a>
+        <a href="pages/rula.html" class="module-card fade-in fade-in-delay-2">
+          <div class="module-emoji">💪</div>
+          <div class="module-title">Módulo 3 — RULA</div>
+          <div class="module-desc">Evaluación de miembros superiores. Brazos, muñecas, cuello y tronco.</div>
+          <div class="module-status pending" id="status-rula">⭕ Pendiente</div>
+        </a>
+        <a href="pages/psicosocial.html" class="module-card fade-in fade-in-delay-3">
+          <div class="module-emoji">🧠</div>
+          <div class="module-title">Módulo 4 — Psicosocial</div>
+          <div class="module-desc">30 preguntas en 7 dimensiones: carga mental, cohesión, gestión del tiempo y más.</div>
+          <div class="module-status pending" id="status-psicosocial">⭕ Pendiente</div>
+        </a>
+        <a href="pages/dashboard.html" class="module-card fade-in" style="background: linear-gradient(135deg, var(--clr-bg-card), rgba(99,102,241,0.08));">
+          <div class="module-emoji">📊</div>
+          <div class="module-title">Módulo 5 — Resultados</div>
+          <div class="module-desc">Dashboard con gráficas, semáforo de riesgo e informe exportable para auditoría.</div>
+          <div class="module-status locked" id="status-dashboard">🔒 Completa los módulos anteriores</div>
+        </a>
+      </div>
+    </section>
+
+    <!-- MARCO NORMATIVO -->
+    <section style="margin-top: 1.5rem;">
+      <div class="card fade-in">
+        <div class="card-header">
+          <div class="card-icon card-icon-primary">⚖️</div>
+          <div>
+            <div class="card-title">Marco Legal y Normativo</div>
+            <div class="card-subtitle">Base técnica-legal del sistema</div>
+          </div>
+        </div>
+        <div class="norm-row">
+          <div class="norm-icon">🇵🇪</div>
+          <div>
+            <div class="norm-title">Ley N.° 29783 + D.S. N.° 005-2012-TR</div>
+            <div class="norm-desc">Ley de Seguridad y Salud en el Trabajo y su Reglamento — Marco SST peruano</div>
+          </div>
+        </div>
+        <div class="norm-row">
+          <div class="norm-icon">📋</div>
+          <div>
+            <div class="norm-title">R.M. N.° 375-2008-TR</div>
+            <div class="norm-desc">Norma Básica de Ergonomía y Procedimiento de Evaluación de Riesgo Disergonómico</div>
+          </div>
+        </div>
+        <div class="norm-row">
+          <div class="norm-icon">📐</div>
+          <div>
+            <div class="norm-title">REBA — Hignett & McAtamney (2000)</div>
+            <div class="norm-desc">Rapid Entire Body Assessment. Applied Ergonomics, 31, 201-205.</div>
+          </div>
+        </div>
+        <div class="norm-row">
+          <div class="norm-icon">💪</div>
+          <div>
+            <div class="norm-title">RULA — McAtamney & Corlett (1993)</div>
+            <div class="norm-desc">Rapid Upper Limb Assessment. Applied Ergonomics, 24(2), 91-99.</div>
+          </div>
+        </div>
+        <div class="norm-row">
+          <div class="norm-icon">🧠</div>
+          <div>
+            <div class="norm-title">FPSICO / NTP INSST</div>
+            <div class="norm-desc">Método de Evaluación de Factores Psicosociales del INSST — NTP 450, 451, 452, 601</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ADVERTENCIA -->
+    <div class="alert alert-warning" style="margin-top: 1.5rem;">
+      <span class="alert-icon">⚠️</span>
+      <div class="alert-body">
+        <div class="alert-title">Advertencia técnica</div>
+        REBA y RULA son métodos observacionales de cribado. No diagnostican lesiones, no determinan la aptitud del trabajador y no reemplazan una evaluación ergonómica integral ni la evaluación médica ocupacional.
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+  SIGA.init('index');
+  document.getElementById('sidebar-root').innerHTML = renderSidebar('index');
+  SIGA.updateProgressBar();
+
+  // Actualizar estados de módulos
+  const s = SIGA.state.progreso;
+  const statusMap = {
+    'status-identificacion': s.identificacion,
+    'status-reba': s.reba,
+    'status-rula': s.rula,
+    'status-psicosocial': s.psicosocial,
+  };
+  Object.entries(statusMap).forEach(([id, done]) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (done) {
+      el.className = 'module-status done';
+      el.textContent = '✅ Completado';
+    }
+  });
+  if (s.reba && s.rula && s.psicosocial) {
+    const d = document.getElementById('status-dashboard');
+    if (d) { d.className = 'module-status done'; d.textContent = '✅ Ver resultados'; }
+  }
+</script>
+</body>
+</html>

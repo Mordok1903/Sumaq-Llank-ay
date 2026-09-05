@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Evaluación Psicosocial — SIGA</title>
+  <meta name="description" content="Cuestionario de factores de riesgo psicosocial. 30 preguntas en 7 dimensiones basadas en FPSICO.">
+  <link rel="stylesheet" href="../css/styles.css">
+  <script src="../js/app.js" defer></script>
+  <script src="../js/psicosocial.js" defer></script>
+  <style>
+    .dim-progress-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem; margin-bottom: 1.5rem; }
+    .dim-mini-card { background: var(--clr-bg-card); border: 1px solid var(--clr-border); border-radius: var(--radius-md); padding: 0.75rem; }
+    .dim-mini-title { font-size: 0.72rem; font-weight: 600; color: var(--clr-text-muted); margin-bottom: 0.375rem; }
+    .dim-mini-pct { font-size: 1.25rem; font-weight: 800; }
+    .dim-mini-bar { height: 4px; background: var(--clr-bg-elevated); border-radius: 9999px; margin-top: 0.375rem; overflow: hidden; }
+    .dim-mini-fill { height: 100%; border-radius: 9999px; transition: width 0.5s; }
+    .psico-sticky { position: sticky; top: 1.5rem; }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <div id="sidebar-root"></div>
+
+  <main class="main-content">
+    <div class="topbar">
+      <div class="topbar-breadcrumb">
+        <a href="../index.html">🏠 Inicio</a><span>/</span>
+        <a href="rula.html">RULA</a><span>/</span>
+        <span class="current">Psicosocial</span>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn btn-secondary btn-sm" onclick="SIGA.save(); SIGA.showToast('Guardado ✓')">💾 Guardar</button>
+      </div>
+    </div>
+
+    <div class="page-header fade-in">
+      <p class="page-tag">🧠 Módulo 4 de 4</p>
+      <h1>Evaluación de Factores Psicosociales</h1>
+      <p>Responda las siguientes 30 preguntas seleccionando la opción que mejor describa su situación laboral habitual. La información es confidencial y se usa únicamente para fines de mejora en SST.</p>
+    </div>
+
+    <div class="stepper fade-in">
+      <div class="step done"><div class="step-circle">✓</div></div>
+      <div class="step-line done"></div>
+      <div class="step done"><div class="step-circle">✓</div></div>
+      <div class="step-line done"></div>
+      <div class="step done"><div class="step-circle">✓</div></div>
+      <div class="step-line done"></div>
+      <div class="step active"><div class="step-circle">4</div><span class="step-label">Psicosocial</span></div>
+    </div>
+
+    <!-- Mini-resumen de progreso por dimensión -->
+    <div class="dim-progress-grid fade-in" id="dim-progress-grid"></div>
+
+    <!-- Barra de completitud -->
+    <div class="card fade-in" style="padding:1rem 1.25rem; margin-bottom:1.5rem;">
+      <div class="flex items-center justify-between">
+        <span style="font-size:0.875rem; font-weight:600;">Completitud del cuestionario</span>
+        <span id="completitud-pct" style="font-size:0.875rem; font-weight:800; color:var(--clr-primary-light);">0%</span>
+      </div>
+      <div class="progress-bar-track" style="margin-top:0.5rem; height:6px;">
+        <div class="progress-bar-fill" id="completitud-bar" style="width:0%;"></div>
+      </div>
+      <div style="font-size:0.72rem; color:var(--clr-text-muted); margin-top:0.375rem;">
+        <span id="completitud-count">0</span> de 30 preguntas respondidas
+      </div>
+    </div>
+
+    <!-- CUESTIONARIO POR DIMENSIONES -->
+    <div id="cuestionario-container"></div>
+
+    <!-- INSTRUCCIONES ESCALA -->
+    <div class="alert alert-info fade-in">
+      <span class="alert-icon">ℹ️</span>
+      <div class="alert-body">
+        <div class="alert-title">Escala de respuesta</div>
+        <strong>1</strong> = Nunca / Muy insatisfecho · <strong>2</strong> = Raramente / Insatisfecho · <strong>3</strong> = A veces / Indiferente · <strong>4</strong> = Frecuentemente / Satisfecho · <strong>5</strong> = Siempre / Muy satisfecho
+      </div>
+    </div>
+
+    <div class="form-navigation">
+      <a href="rula.html" class="btn btn-secondary">← Módulo anterior</a>
+      <button type="button" class="btn btn-primary btn-lg" onclick="guardarYContinuar()">Ver Resultados →</button>
+    </div>
+  </main>
+</div>
+
+<script>
+  SIGA.init('psicosocial');
+  document.getElementById('sidebar-root').innerHTML = renderSidebar('psicosocial');
+
+  const respuestas = Object.assign({}, SIGA.state.psicosocial?.respuestas || {});
+
+  // ── Renderizar cuestionario por dimensiones ──
+  function renderCuestionario() {
+    const container = document.getElementById('cuestionario-container');
+    let html = '';
+
+    PSICO.dimensiones.forEach((dim, di) => {
+      html += `
+        <div class="dimension-card fade-in" id="dim-${dim.id}" style="animation-delay:${di*0.05}s">
+          <div class="dimension-header" onclick="toggleDim('${dim.id}')">
+            <div class="dimension-title">
+              <span>${dim.icono}</span>
+              <span>${dim.nombre}</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:0.75rem;">
+              <span class="dimension-items" id="dim-count-${dim.id}">0/${dim.preguntas.length} respondidas</span>
+              <span class="collapse-icon" id="dim-icon-${dim.id}">▼</span>
+            </div>
+          </div>
+          <div style="font-size:0.8rem; color:var(--clr-text-muted); margin-bottom:0.75rem; line-height:1.5;">${dim.descripcion}</div>
+          <div class="dimension-score-bar">
+            <div class="dimension-score-fill score-fill-warn" id="dim-bar-${dim.id}" style="width:0%"></div>
+          </div>
+          <div id="dim-content-${dim.id}" style="margin-top:1rem;">`;
+
+      dim.preguntas.forEach(num => {
+        const p = PSICO.preguntas[num];
+        const val = respuestas[`q${num}`];
+        html += renderPregunta(num, p, val, dim.id);
+      });
+
+      html += `</div></div>`;
+    });
+
+    container.innerHTML = html;
+    actualizarTodo();
+  }
+
+  function renderPregunta(num, p, valorActual, dimId) {
+    const descripciones = ['Nunca', 'Rara vez', 'A veces', 'Frec.', 'Siempre'];
+    let scale = '';
+    for (let v = 1; v <= 5; v++) {
+      const sel = valorActual == v ? 'selected' : '';
+      scale += `
+        <label class="likert-option ${sel}" onclick="responder(${num}, ${v}, '${dimId}', this)">
+          <input type="radio" name="q${num}" value="${v}" ${valorActual == v ? 'checked' : ''}>
+          <span class="likert-val">${v}</span>
+          <span class="likert-desc">${p.escala ? p.escala[v-1] : descripciones[v-1]}</span>
+        </label>`;
+    }
+    const respondida = valorActual !== undefined ? 'answered' : '';
+    return `
+      <div class="likert-question ${respondida}" id="q-wrapper-${num}">
+        <div class="likert-text">
+          <span class="likert-num">P${num}.</span> ${p.texto}
+          ${p.inversa ? '<span style="font-size:0.7rem; color:var(--clr-warn); margin-left:0.4rem;">(pregunta inversa)</span>' : ''}
+        </div>
+        <div class="likert-scale">${scale}</div>
+        <div class="likert-labels">
+          <span>← Nunca / Muy insatisfecho</span>
+          <span>Siempre / Muy satisfecho →</span>
+        </div>
+      </div>`;
+  }
+
+  function responder(num, valor, dimId, el) {
+    // Desmarcar otros en la misma pregunta
+    el.closest('.likert-scale').querySelectorAll('.likert-option').forEach(o => o.classList.remove('selected'));
+    el.classList.add('selected');
+    respuestas[`q${num}`] = valor;
+    // Marcar como respondida
+    const wrapper = document.getElementById(`q-wrapper-${num}`);
+    if (wrapper) wrapper.classList.add('answered');
+    actualizarTodo();
+  }
+
+  function actualizarTodo() {
+    const resultados = PSICO.calcularTodo(respuestas);
+    const completitud = PSICO.getCompletitud(respuestas);
+
+    // Barra de completitud
+    document.getElementById('completitud-pct').textContent = completitud.pct + '%';
+    document.getElementById('completitud-bar').style.width = completitud.pct + '%';
+    document.getElementById('completitud-count').textContent = completitud.contestadas;
+
+    // Actualizar mini-cards de dimensiones
+    const dimGrid = document.getElementById('dim-progress-grid');
+    let miniHtml = '';
+    PSICO.dimensiones.forEach(dim => {
+      const r = resultados.dimensiones[dim.id];
+      const pct = r?.pct ?? 0;
+      const colorMap = { safe: 'var(--clr-safe)', warn: 'var(--clr-warn)', danger: 'var(--clr-danger)' };
+      const color = colorMap[r?.clase] ?? 'var(--clr-text-muted)';
+      miniHtml += `
+        <div class="dim-mini-card">
+          <div class="dim-mini-title">${dim.icono} ${dim.nombre.split(' ')[0]}</div>
+          <div class="dim-mini-pct" style="color:${color}">${r?.pct !== null ? pct+'%' : '—'}</div>
+          <div class="dim-mini-bar">
+            <div class="dim-mini-fill" style="width:${pct}%; background:${color};"></div>
+          </div>
+          <div style="font-size:0.7rem; color:var(--clr-text-muted); margin-top:2px;">${r?.nivelTexto ?? 'Sin respuestas'}</div>
+        </div>`;
+    });
+    dimGrid.innerHTML = miniHtml;
+
+    // Actualizar contadores por dimensión
+    PSICO.dimensiones.forEach(dim => {
+      const r = resultados.dimensiones[dim.id];
+      const countEl = document.getElementById(`dim-count-${dim.id}`);
+      const barEl = document.getElementById(`dim-bar-${dim.id}`);
+      if (countEl && r) {
+        countEl.textContent = `${r.contestadas ?? 0}/${dim.preguntas.length} respondidas`;
+      }
+      if (barEl && r?.pct !== null) {
+        barEl.style.width = r.pct + '%';
+        barEl.className = `dimension-score-fill score-fill-${r.clase === 'safe' ? 'safe' : r.clase === 'warn' ? 'warn' : 'danger'}`;
+      }
+    });
+  }
+
+  function toggleDim(id) {
+    const content = document.getElementById(`dim-content-${id}`);
+    const icon = document.getElementById(`dim-icon-${id}`);
+    const isOpen = content.style.display !== 'none';
+    content.style.display = isOpen ? 'none' : 'block';
+    icon.textContent = isOpen ? '▶' : '▼';
+  }
+
+  function guardarYContinuar() {
+    const completitud = PSICO.getCompletitud(respuestas);
+    if (completitud.contestadas < 15) {
+      SIGA.showToast('Responda al menos 15 preguntas para continuar', 'warning'); return;
+    }
+    const resultados = PSICO.calcularTodo(respuestas);
+    SIGA.state.psicosocial = { respuestas, ...resultados };
+    SIGA.state.progreso.psicosocial = true;
+    SIGA.save();
+    SIGA.showToast(`Cuestionario guardado — ${completitud.contestadas}/30 ✓`);
+    setTimeout(() => window.location.href = 'dashboard.html', 800);
+  }
+
+  renderCuestionario();
+</script>
+</body>
+</html>
