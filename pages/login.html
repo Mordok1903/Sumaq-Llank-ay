@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Iniciar Sesión — Sumaq Llank'ay</title>
+  <meta name="description" content="Acceso a Sumaq Llank'ay — Sistema de Evaluación de Riesgos Laborales.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/config.js"></script>
+  <script src="../js/auth.js"></script>
+</head>
+<body class="login-page">
+
+<div class="login-container">
+  <div class="login-bg"></div>
+
+  <div class="login-card">
+    <!-- Logo sin rayo -->
+    <div class="login-logo">
+      <div class="login-logo-text">Sumaq Llank'ay</div>
+    </div>
+
+    <h1 class="login-title">Bienvenido de vuelta</h1>
+    <p class="login-subtitle">Ingrese sus credenciales para acceder al sistema de evaluación</p>
+
+    <!-- Error message -->
+    <div class="login-error" id="login-error">
+      <span>❌</span>
+      <span id="login-error-text"></span>
+    </div>
+
+    <!-- Login Form -->
+    <form id="login-form" novalidate>
+      <div class="login-form-group">
+        <label for="login-email">Correo electrónico</label>
+        <input class="form-input" type="email" id="login-email" placeholder="evaluador@empresa.com" required autocomplete="email">
+      </div>
+
+      <div class="login-form-group">
+        <label for="login-password">Contraseña</label>
+        <input class="form-input" type="password" id="login-password" placeholder="••••••••" required autocomplete="current-password">
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-full btn-lg" id="login-btn">
+        🔐 Iniciar Sesión
+      </button>
+    </form>
+
+    <div class="login-footer">
+      Sumaq Llank'ay — v1.0<br>
+      RM 375-2008-TR · Ley N.° 29783
+    </div>
+  </div>
+</div>
+
+<script>
+  AUTH.init();
+
+  // Si ya hay sesión activa, redirigir al inicio
+  (async () => {
+    const session = await AUTH.getSession();
+    if (session) {
+      window.location.replace('../index.html');
+      return;
+    }
+  })();
+
+  // Manejar submit del formulario
+  document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    const btn = document.getElementById('login-btn');
+    const errorEl = document.getElementById('login-error');
+    const errorText = document.getElementById('login-error-text');
+
+    if (!email || !password) {
+      errorText.textContent = 'Complete todos los campos.';
+      errorEl.classList.add('show');
+      return;
+    }
+
+    // Estado de carga
+    btn.disabled = true;
+    btn.textContent = '⏳ Ingresando...';
+    errorEl.classList.remove('show');
+
+    const result = await AUTH.login(email, password);
+
+    if (result.success) {
+      btn.textContent = '✅ ¡Bienvenido!';
+      setTimeout(() => {
+        window.location.replace('../index.html');
+      }, 500);
+    } else {
+      errorText.textContent = result.error;
+      errorEl.classList.add('show');
+      btn.disabled = false;
+      btn.textContent = '🔐 Iniciar Sesión';
+    }
+  });
+
+  // Enter para enviar
+  document.getElementById('login-password').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') document.getElementById('login-form').requestSubmit();
+  });
+</script>
+</body>
+</html>

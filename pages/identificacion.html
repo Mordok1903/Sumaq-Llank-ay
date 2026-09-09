@@ -3,10 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Identificación del Trabajador — SIGA</title>
+  <title>Identificación del Trabajador — Sumaq Llank'ay</title>
   <meta name="description" content="Datos de identificación del trabajador, empresa y tarea para la evaluación de riesgos laborales SIGA.">
   <link rel="stylesheet" href="../css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/config.js"></script>
+  <script src="../js/auth.js"></script>
   <script src="../js/app.js"></script>
+  <script src="../js/evidencias.js"></script>
 </head>
 <body>
 <div class="app-layout">
@@ -209,6 +213,8 @@
             <input type="checkbox" id="c2"> Se registró evidencia fotográfica o videográfica del ciclo de trabajo
             <span style="margin-left:auto; font-size:0.75rem; color:var(--clr-text-muted);">Evidencia</span>
           </label>
+          <!-- ZONA DE UPLOAD DE EVIDENCIAS -->
+          <div id="evidencias-upload-container" style="margin-top:0.5rem;"></div>
           <label class="score-option" id="chk-informado">
             <input type="checkbox" id="c3"> Se informó al trabajador sobre el propósito de la evaluación
             <span style="margin-left:auto; font-size:0.75rem; color:var(--clr-text-muted);">Ética</span>
@@ -232,39 +238,50 @@
 </div>
 
 <script>
-  SIGA.init('identificacion');
-  document.getElementById('sidebar-root').innerHTML = renderSidebar('identificacion');
+  // Inicializar con auth
+  (async () => {
+    SIGA.init('identificacion');
+    document.getElementById('sidebar-root').innerHTML = renderSidebar('identificacion');
 
-  // Establecer fecha de hoy por defecto
-  const hoy = new Date().toISOString().split('T')[0];
-  document.getElementById('fechaEval').value = hoy;
+    // Asegurar que existe una evaluación activa
+    const evaluacionId = await SIGA.ensureEvaluacion();
 
-  // Cargar datos guardados
-  const saved = SIGA.state.identificacion;
-  if (saved) {
-    const fields = ['empresa','ruc','sede','area','actividad','fechaEval','trabajador','dni',
-                    'puesto','antiguedad','sexo','turno','tarea','fase','duracionCiclo',
-                    'duracionJornada','frecuencia','descripcionTarea','monitorista',
-                    'cargoMonitorista','observaciones'];
-    fields.forEach(id => {
+    // Establecer fecha de hoy por defecto
+    const hoy = new Date().toISOString().split('T')[0];
+    document.getElementById('fechaEval').value = hoy;
+
+    // Cargar datos guardados
+    const saved = SIGA.state.identificacion;
+    if (saved) {
+      const fields = ['empresa','ruc','sede','area','actividad','fechaEval','trabajador','dni',
+                      'puesto','antiguedad','sexo','turno','tarea','fase','duracionCiclo',
+                      'duracionJornada','frecuencia','descripcionTarea','monitorista',
+                      'cargoMonitorista','observaciones'];
+      fields.forEach(id => {
+        const el = document.getElementById(id);
+        if (el && saved[id] !== undefined) el.value = saved[id];
+      });
+      if (saved.c1) document.getElementById('c1').checked = true;
+      if (saved.c2) document.getElementById('c2').checked = true;
+      if (saved.c3) document.getElementById('c3').checked = true;
+      if (saved.c4) document.getElementById('c4').checked = true;
+    }
+
+    // Resaltar checkboxes marcados
+    ['c1','c2','c3','c4'].forEach(id => {
       const el = document.getElementById(id);
-      if (el && saved[id] !== undefined) el.value = saved[id];
+      const parent = el.closest('.score-option');
+      el.addEventListener('change', () => {
+        parent.classList.toggle('selected', el.checked);
+      });
+      if (el.checked) parent.classList.add('selected');
     });
-    if (saved.c1) document.getElementById('c1').checked = true;
-    if (saved.c2) document.getElementById('c2').checked = true;
-    if (saved.c3) document.getElementById('c3').checked = true;
-    if (saved.c4) document.getElementById('c4').checked = true;
-  }
 
-  // Resaltar checkboxes marcados
-  ['c1','c2','c3','c4'].forEach(id => {
-    const el = document.getElementById(id);
-    const parent = el.closest('.score-option');
-    el.addEventListener('change', () => {
-      parent.classList.toggle('selected', el.checked);
-    });
-    if (el.checked) parent.classList.add('selected');
-  });
+    // Renderizar zona de upload de evidencias
+    if (evaluacionId) {
+      EVIDENCIAS.renderUploadZone(evaluacionId, 'evidencias-upload-container');
+    }
+  })();
 
   function recogerDatos() {
     return {
@@ -296,7 +313,7 @@
     };
   }
 
-  function guardarYContinuar() {
+  async function guardarYContinuar() {
     const datos = recogerDatos();
     const required = ['empresa','area','fechaEval','trabajador','puesto','tarea','monitorista'];
     const missing = required.filter(f => !datos[f]);
@@ -305,6 +322,20 @@
       document.getElementById(missing[0]).focus();
       return;
     }
+
+    // Validar mínimos de evidencias
+    const evaluacionId = localStorage.getItem('siga_evaluacion_id');
+    if (evaluacionId) {
+      const validacion = await EVIDENCIAS.validarMinimos(evaluacionId);
+      if (!validacion.valido) {
+        SIGA.showToast(validacion.errores[0], 'error');
+        return;
+      }
+      // Auto-marcar el checkbox de evidencia
+      document.getElementById('c2').checked = true;
+      datos.c2 = true;
+    }
+
     SIGA.state.identificacion = datos;
     SIGA.state.progreso.identificacion = true;
     SIGA.save();

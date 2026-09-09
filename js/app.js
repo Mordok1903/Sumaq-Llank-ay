@@ -1,6 +1,7 @@
 // ================================================
 // app.js — Controlador Global del Sistema SIGA
 // Estado compartido, navegación, localStorage
+// + Integración con Supabase Auth
 // ================================================
 
 const SIGA = {
@@ -65,6 +66,8 @@ const SIGA = {
   // ── Persistencia en localStorage ──
   save() {
     localStorage.setItem('siga_state', JSON.stringify(this.state));
+    // Sync con Supabase en background (sin bloquear)
+    this._syncToSupabase();
   },
   load() {
     const saved = localStorage.getItem('siga_state');
@@ -80,8 +83,92 @@ const SIGA = {
   reset() {
     if (confirm('¿Estás seguro de que deseas reiniciar toda la evaluación? Se perderán todos los datos ingresados.')) {
       localStorage.removeItem('siga_state');
-      window.location.href = '../index.html';
+      localStorage.removeItem('siga_evaluacion_id');
+      window.location.href = window.location.pathname.includes('/pages/') ? 'evaluaciones.html' : 'pages/evaluaciones.html';
     }
+  },
+
+  // ── Sincronizar estado con Supabase ──
+  async _syncToSupabase() {
+    try {
+      const evaluacionId = localStorage.getItem('siga_evaluacion_id');
+      if (!evaluacionId) return;
+
+      const session = await AUTH.getSession();
+      if (!session) return;
+
+      const sb = AUTH.getSupabase();
+      const ident = this.state.identificacion || {};
+
+      const updateData = {
+        empresa: ident.empresa || null,
+        ruc: ident.ruc || null,
+        sede: ident.sede || null,
+        area: ident.area || null,
+        actividad: ident.actividad || null,
+        fecha_eval: ident.fechaEval || null,
+        trabajador: ident.trabajador || null,
+        dni: ident.dni || null,
+        puesto: ident.puesto || null,
+        antiguedad: ident.antiguedad || null,
+        sexo: ident.sexo || null,
+        turno: ident.turno || null,
+        tarea: ident.tarea || null,
+        fase: ident.fase || null,
+        duracion_ciclo: ident.duracionCiclo || null,
+        duracion_jornada: ident.duracionJornada || null,
+        frecuencia: ident.frecuencia || null,
+        descripcion_tarea: ident.descripcionTarea || null,
+        monitorista: ident.monitorista || null,
+        cargo_monitorista: ident.cargoMonitorista || null,
+        observaciones: ident.observaciones || null,
+        checklist: { c1: ident.c1, c2: ident.c2, c3: ident.c3, c4: ident.c4 },
+        reba_datos: this.state.reba || {},
+        reba_puntaje_final: this.state.reba?.puntuacionFinal ?? null,
+        reba_nivel: this.state.reba?.nivel ?? null,
+        reba_riesgo: this.state.reba?.riesgo ?? null,
+        rula_datos: this.state.rula || {},
+        rula_puntaje_final: this.state.rula?.puntuacionFinal ?? null,
+        rula_nivel: this.state.rula?.nivel ?? null,
+        rula_riesgo: this.state.rula?.accion ?? null,
+        psicosocial_datos: this.state.psicosocial || {},
+        psicosocial_promedio: this.state.psicosocial?.promedioGlobal ?? null,
+        estado: (this.state.progreso?.reba && this.state.progreso?.rula && this.state.progreso?.psicosocial)
+          ? 'completada' : 'en_progreso'
+      };
+
+      await sb
+        .from('evaluaciones')
+        .update(updateData)
+        .eq('id', evaluacionId);
+
+    } catch (err) {
+      console.warn('[SIGA] Error sincronizando con Supabase:', err);
+    }
+  },
+
+  // ── Obtener o crear evaluación ──
+  async ensureEvaluacion() {
+    let evaluacionId = localStorage.getItem('siga_evaluacion_id');
+    if (evaluacionId) return evaluacionId;
+
+    const session = await AUTH.getSession();
+    if (!session) return null;
+
+    const sb = AUTH.getSupabase();
+    const { data, error } = await sb
+      .from('evaluaciones')
+      .insert({ evaluador_id: session.user.id })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('[SIGA] Error creando evaluación:', error);
+      return null;
+    }
+
+    localStorage.setItem('siga_evaluacion_id', data.id);
+    return data.id;
   },
 
   // ── Cálculo de progreso ──
@@ -141,6 +228,25 @@ const SIGA = {
   // ── Inicializar en cada página ──
   init(page) {
     this.load();
+
+    // Inicializar auth si disponible
+    if (typeof AUTH !== 'undefined') {
+      AUTH.init();
+      // Auth guard (excepto login)
+      if (page !== 'login') {
+        AUTH.requireAuth(page).then(async (ok) => {
+          if (!ok) return;
+          // Inyectar user badge en sidebar
+          const userBadgeHtml = await AUTH.renderUserBadge();
+          const sidebarFooter = document.querySelector('.sidebar-footer');
+          if (sidebarFooter) sidebarFooter.insertAdjacentHTML('beforebegin', userBadgeHtml);
+        });
+      }
+    } else {
+      // Si no hay auth, mostrar directamente
+      document.body.classList.add('auth-ready');
+    }
+
     this.setActiveNav(page);
     this.updateProgressBar();
     document.addEventListener('keydown', (e) => {
@@ -174,15 +280,6 @@ const SIGA = {
 
 // ── Sidebar HTML (inyectado en cada página) ──
 function renderSidebar(activePage) {
-  const pages = {
-    index: 'Dashboard',
-    identificacion: 'Identificación',
-    reba: 'Calculadora REBA',
-    rula: 'Calculadora RULA',
-    psicosocial: 'Riesgos Psicosociales',
-    dashboard: 'Resultados'
-  };
-
   const progress = SIGA.getProgress();
   const s = SIGA.state.progreso;
 
@@ -195,18 +292,11 @@ function renderSidebar(activePage) {
     return '';
   };
 
-  const navItems = [
-    { id: 'index', icon: '🏠', label: 'Inicio', href: activePage === 'index' ? '#' : '../index.html' },
-  ];
-
   return `
 <aside class="sidebar">
   <div class="sidebar-brand">
     <div class="sidebar-logo">
-      <div class="sidebar-logo-icon">⚡</div>
-      <div>
-        <div class="sidebar-logo-text">SIGA</div>
-      </div>
+      <div class="sidebar-logo-text">Sumaq Llank'ay</div>
     </div>
     <div class="sidebar-logo-sub">Sistema de Evaluación de Riesgos</div>
   </div>
@@ -226,6 +316,9 @@ function renderSidebar(activePage) {
       <div class="sidebar-nav-label">Navegación</div>
       <a class="nav-item ${activePage==='index'?'active':''}" href="${getRelPath(activePage,'index.html')}" data-page="index">
         <span class="nav-item-icon">🏠</span> Inicio
+      </a>
+      <a class="nav-item ${activePage==='evaluaciones'?'active':''}" href="${getRelPath(activePage,'pages/evaluaciones.html')}" data-page="evaluaciones">
+        <span class="nav-item-icon">📋</span> Mis Evaluaciones
       </a>
     </div>
 
@@ -266,7 +359,6 @@ function renderSidebar(activePage) {
   </nav>
 
   <div class="sidebar-footer">
-    <strong>Consultoría Carranza E.I.R.L.</strong><br>
     RM 375-2008-TR · Ley N.° 29783<br>
     Versión 1.0 — 2026
   </div>
