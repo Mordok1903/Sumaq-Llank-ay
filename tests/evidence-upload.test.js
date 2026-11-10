@@ -47,11 +47,13 @@ async function screen(run, uploadImpl) {
       (node) => node.textContent === "Subir evidencias",
     );
     const status = container.querySelector('[role="status"]');
-    const select = (files) =>
-      Object.defineProperty(input, "files", {
+    const select = (files, source = input) => {
+      Object.defineProperty(source, "files", {
         configurable: true,
         value: files,
       });
+      source.dispatchEvent(new dom.window.Event("change"));
+    };
     const submit = async () => {
       button.click();
       const deadline = Date.now() + 2000;
@@ -145,19 +147,65 @@ test("carga: archivo excesivo se rechaza sin leerlo a memoria ni enviarlo", () =
     assert.match(status.textContent, /10 MB/);
   }));
 
-test("carga: un lote parcial conserva su galería y explica qué volver a seleccionar", () =>
+test("carga: un lote parcial permite reintentar solo el archivo pendiente", () =>
   screen(
-    async ({ select, submit, description, status, container }) => {
+    async ({ calls, select, submit, description, status, container }) => {
       description.value = "Postura de prueba suficientemente documentada";
       select([photo(), video()]);
       await submit();
       assert.match(
         status.textContent,
-        /1 archivo\(s\) guardado\(s\).*Seleccione de nuevo los restantes/,
+        /1 archivo\(s\) guardado\(s\).*reintentar los pendientes/,
       );
       assert.match(container.textContent, /1\/10 fotos · 0\/3 videos/);
+      assert.equal(
+        container.querySelectorAll(".evidence-selection li").length,
+        1,
+      );
+      await submit();
+      assert.equal(calls.upload, 3);
+      assert.match(container.textContent, /1\/10 fotos · 1\/3 videos/);
     },
     async (call) => {
       if (call === 2) throw new Error("No se pudo guardar el video");
     },
   ));
+
+test("cámara: foto y video usan sus selectores nativos y solo el video guarda el segundo indicado", () => {
+  const timestamps = [];
+  return screen(
+    async ({ calls, select, submit, description, container }) => {
+      const frame = container.querySelector('input[type="number"]');
+      assert.equal(frame.closest("[hidden]") !== null, true);
+      for (const [label, accept, file] of [
+        ["Tomar foto", "image/*", photo()],
+        ["Grabar video", "video/*", video()],
+      ]) {
+        const source = container.querySelector(`input[aria-label="${label}"]`);
+        assert.equal(source.getAttribute("capture"), "environment");
+        assert.equal(source.accept, accept);
+        const button = [...container.querySelectorAll("button")].find(
+          (node) => node.textContent === label,
+        );
+        source.addEventListener("click", () => select([file], source), {
+          once: true,
+        });
+        button.click();
+      }
+      assert.equal(calls.upload, 0);
+      assert.equal(frame.closest("[hidden]"), null);
+      frame.value = "12.5";
+      description.value = "Postura documentada desde la cámara del dispositivo";
+      await submit();
+      assert.deepEqual(timestamps, [
+        ["foto.png", 0],
+        ["video.mp4", 12.5],
+      ]);
+      assert.equal(frame.closest("[hidden]") !== null, true);
+      assert.match(container.textContent, /Postura a los 12\.5 s/);
+    },
+    async (call, file, meta) => {
+      timestamps.push([file.name, meta.fotograma_segundos]);
+    },
+  );
+});

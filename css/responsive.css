@@ -281,6 +281,28 @@ input[type="checkbox"] {
 .upload-gallery {
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 155px), 1fr));
 }
+.evidence-sources {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-block: 0.75rem;
+}
+.evidence-selection {
+  padding-inline-start: 0;
+  margin-block: 0.75rem;
+  list-style: none;
+}
+.evidence-selection li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-block: 0.25rem;
+  overflow-wrap: anywhere;
+}
+.evidence-selection button {
+  flex-shrink: 0;
+}
 .upload-thumb-info {
   overflow-wrap: anywhere;
 }

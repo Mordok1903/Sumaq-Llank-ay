@@ -25,7 +25,9 @@ Describe la actividad y las condiciones observadas. Confirma la preparación sol
 
 ## 3. Adjuntar evidencias
 
-En Identificación, selecciona el método documentado, el lado corporal y el segundo del video —0 para una foto—. Escribe una descripción de al menos diez caracteres que permita relacionar el archivo con la postura y sus ángulos. Selecciona archivos y pulsa **Subir evidencias**.
+En Identificación, selecciona el método documentado y el lado corporal. Escribe al menos diez caracteres para describir la postura y sus ángulos. Usa **Elegir archivos** para adjuntar archivos existentes. Usa **Tomar foto** o **Grabar video** en dispositivos cuyo navegador admite captura desde la cámara.
+
+Al añadir un video, indica en qué segundo aparece la postura evaluada. Escribe `12` si se ve en 0:12, `80` si se ve en 1:20 o `0` si se ve al inicio. El campo se aplica a los videos seleccionados. Si cada video requiere un segundo distinto, súbelos por separado. Revisa los archivos seleccionados y pulsa **Subir evidencias**.
 
 | Archivo | Formatos       | Tamaño por archivo | Cantidad por evaluación |
 | ------- | -------------- | ------------------ | ----------------------- |
