@@ -7,7 +7,7 @@ if (
   !isPublicSupabaseKey(env.VITE_SUPABASE_ANON_KEY)
 )
   throw new Error(
-    "La publicación requiere Supabase y su clave pública configurados. El modo de prueba local no se publica.",
+    "Configura VITE_APP_MODE=supabase, VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY con la clave pública de Supabase. En Vercel deben estar disponibles en el entorno del despliegue (Preview o Production). El modo de prueba local no se publica.",
   );
 if (
   Object.keys(env).some(

@@ -10,7 +10,7 @@ El acceso incluye recuperación de contraseña y un diseño adaptable a celulare
 
 ## Probar en este equipo
 
-Requiere Node.js 22.12 o superior. Desde la carpeta del proyecto:
+Requiere Node.js 22, versión 22.12 o posterior dentro de esa rama. El rango del proyecto excluye otras versiones mayores para conservar el entorno validado. Desde la carpeta del proyecto:
 
 ```powershell
 npm ci
@@ -33,6 +33,8 @@ La interfaz se adapta a celular, tableta, laptop y PC. Ver [la revisión del fro
 - Dependencias fijadas, compilación, pruebas de dominio, persistencia, permisos y cifrado de respaldos.
 
 Ver [arquitectura](docs/ARQUITECTURA.md), [cambios y límites](docs/CORRECCIONES.md) y [publicación y configuración](docs/DESPLIEGUE.md).
+
+Para configurar las variables y resolver un despliegue fallido de Vercel, consulta [Vercel paso a paso](docs/VERCEL_PASO_A_PASO.md).
 
 ## Estado de los servicios
 
