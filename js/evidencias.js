@@ -1,5 +1,9 @@
 import { el, $, attempt, toast } from "./ui.js";
 import { CONFIG } from "./config.js";
+import {
+  validateEvidence,
+  validateFile,
+} from "../supabase/functions/_shared/domain/media.js";
 const urls = new Set();
 export async function gallery(app, containerId, readOnly = false) {
   const container = $(containerId);
@@ -172,6 +176,9 @@ export async function uploadZone(app) {
       class: "form-textarea",
       placeholder: "Describa la postura, los ángulos y el momento observado",
       maxlength: 2000,
+      minlength: 10,
+      required: "",
+      "aria-describedby": "evidence-description-help",
       "aria-label": "Descripción de la evidencia",
     }),
     input = el("input", {
@@ -188,11 +195,18 @@ export async function uploadZone(app) {
     text: "Subir evidencias",
     onclick: () =>
       attempt(async () => {
-        if (!input.files.length) throw new Error("Seleccione un archivo");
         upload.disabled = true;
+        let uploaded = 0;
         try {
-          await app.save();
-          for (const file of input.files) {
+          const files = Array.from(input.files || []);
+          if (!files.length) throw new Error("Seleccione un archivo");
+          const meta = validateEvidence({
+            metodo: method.value,
+            lado: side.value,
+            fotograma_segundos: Number(frame.value),
+            descripcion: description.value,
+          });
+          for (const file of files) {
             if (
               file.size >
               (file.type.startsWith("image/")
@@ -200,17 +214,26 @@ export async function uploadZone(app) {
                 : CONFIG.maxVideoBytes)
             )
               throw new Error("Máximo 10 MB por imagen y 25 MB por video");
+            validateFile(file.type, new Uint8Array(await file.arrayBuffer()));
+          }
+          await app.save();
+          for (const file of files) {
             progress.textContent = `Subiendo ${file.name}…`;
-            await app.repo.upload(app.store.id, file, {
-              metodo: method.value,
-              lado: side.value,
-              fotograma_segundos: Number(frame.value),
-              descripcion: description.value,
-            });
+            await app.repo.upload(app.store.id, file, meta);
+            uploaded++;
           }
           input.value = "";
           progress.textContent = "Evidencias guardadas";
           await gallery(app, "evidence-list");
+        } catch (error) {
+          progress.textContent =
+            error.message || "La carga no se completó. Reintente.";
+          if (uploaded) {
+            input.value = "";
+            progress.textContent = `${uploaded} archivo(s) guardado(s). Seleccione de nuevo los restantes. ${progress.textContent}`;
+            await gallery(app, "evidence-list").catch(() => {});
+          }
+          throw error;
         } finally {
           upload.disabled = false;
         }
@@ -223,7 +246,15 @@ export async function uploadZone(app) {
     el("label", { text: "Método documentado" }, method),
     el("label", { text: "Lado corporal" }, side),
     el("label", { text: "Segundo del video (0 para foto)" }, frame),
-    el("label", { text: "Postura y ángulos observados" }, description),
+    el(
+      "label",
+      { text: "Postura y ángulos observados (obligatorio)" },
+      description,
+    ),
+    el("p", {
+      id: "evidence-description-help",
+      text: "Escriba al menos 10 caracteres sobre la postura observada antes de subir fotos o videos.",
+    }),
     input,
     upload,
     progress,

@@ -6,7 +6,11 @@ import {
   sha256,
   text,
 } from "../_shared/domain/evaluation.js";
-import { validateFile, validateEvidence } from "../_shared/domain/media.js";
+import {
+  validateFile,
+  validateEvidence,
+  MediaValidationError,
+} from "../_shared/domain/media.js";
 import { cloudinary } from "../_shared/cloudinary.js";
 import { serverKeys } from "../_shared/server-config.js";
 
@@ -433,6 +437,8 @@ Deno.serve(async (req: Request) => {
   } catch (error) {
     const e = error as Error;
     if (e instanceof HttpError) return respond({ error: e.message }, e.status);
+    if (e instanceof MediaValidationError)
+      return respond({ error: e.message }, 400);
     if (e instanceof SyntaxError)
       return respond({ error: "Solicitud inválida" }, 400);
     if (e.name === "AbortError" || e.name === "TimeoutError")

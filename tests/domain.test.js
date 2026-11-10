@@ -15,6 +15,7 @@ import {
 import {
   validateFile,
   validateEvidence,
+  MediaValidationError,
 } from "../supabase/functions/_shared/domain/media.js";
 import { complete, evidence, reba, rula } from "./fixtures.js";
 
@@ -141,6 +142,7 @@ test("evidencias: límites, contenido, metadatos y serialización estable", () =
   assert.throws(() => validateFile("image/jpeg", big), /10 MB/);
   assert.throws(() =>
     validateEvidence({ metodo: "ambos", lado: "ambos", descripcion: "corta" }),
+    MediaValidationError,
   );
   assert.equal(canonical({ z: 2, a: 1 }), canonical({ a: 1, z: 2 }));
 });
