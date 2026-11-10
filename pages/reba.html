@@ -1,450 +1,772 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Calculadora REBA — Sumaq Llank'ay</title>
-  <meta name="description" content="Evaluación ergonómica REBA - Rapid Entire Body Assessment. Cálculo automático del riesgo postural.">
-  <link rel="stylesheet" href="../css/styles.css">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../js/config.js"></script>
-  <script src="../js/auth.js"></script>
-  <script src="../js/app.js"></script>
-  <script src="../js/reba.js"></script>
-  <style>
-    .reba-layout { display: grid; grid-template-columns: 1fr 300px; gap: 1.5rem; align-items: start; }
-    .group-separator { height: 2px; background: linear-gradient(to right, var(--clr-primary-glow), transparent); margin: 1.5rem 0; border-radius: 9999px; }
-    .angle-hint { font-size: 0.72rem; color: var(--clr-text-muted); font-style: italic; }
-    @media (max-width: 900px) { .reba-layout { grid-template-columns: 1fr; } }
-  </style>
-</head>
-<body>
-<div class="app-layout">
-  <div id="sidebar-root"></div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Calculadora REBA — Sumaq Llank'ay</title>
+    <meta
+      name="description"
+      content="Evaluación ergonómica REBA - Rapid Entire Body Assessment. Cálculo automático del riesgo postural."
+    />
+    <link rel="stylesheet" href="../css/styles.css" />
 
-  <main class="main-content">
-    <div class="topbar">
-      <div class="topbar-breadcrumb">
-        <a href="../index.html">🏠 Inicio</a>
-        <span>/</span>
-        <a href="identificacion.html">Identificación</a>
-        <span>/</span>
-        <span class="current">REBA</span>
-      </div>
-      <div class="topbar-actions">
-        <button class="btn btn-secondary btn-sm" onclick="SIGA.save(); SIGA.showToast('Guardado ✓')">💾 Guardar</button>
-        <button class="btn btn-secondary btn-sm" onclick="resetReba()">🔄 Reiniciar</button>
-      </div>
-    </div>
-
-    <div class="page-header fade-in">
-      <p class="page-tag">🏋️ Módulo 2 de 4</p>
-      <h1>Calculadora REBA</h1>
-      <p>Rapid Entire Body Assessment — Evaluación ergonómica del cuerpo entero. El puntaje se calcula automáticamente mientras selecciona las opciones.</p>
-    </div>
-
-    <div class="stepper fade-in">
-      <div class="step done"><div class="step-circle">✓</div></div>
-      <div class="step-line done"></div>
-      <div class="step active"><div class="step-circle">2</div><span class="step-label">REBA</span></div>
-      <div class="step-line"></div>
-      <div class="step"><div class="step-circle">3</div></div>
-      <div class="step-line"></div>
-      <div class="step"><div class="step-circle">4</div></div>
-    </div>
-
-    <div class="reba-layout">
-      <!-- COLUMNA IZQUIERDA: Formulario -->
-      <div>
-
-        <!-- GRUPO A -->
-        <div class="card fade-in">
-          <div class="card-header">
-            <div class="card-icon card-icon-primary">🔷</div>
-            <div>
-              <div class="card-title">Grupo A — Tronco, Cuello y Piernas</div>
-              <div class="card-subtitle">Segmentos del eje corporal principal + carga/fuerza</div>
-            </div>
-          </div>
-
-          <!-- TRONCO -->
-          <div class="score-group">
-            <div class="score-group-title">Tronco <span class="angle-hint">— Ángulo de flexión/extensión del tronco</span></div>
-            <div class="score-options" id="tronco-opts">
-              <label class="score-option" onclick="sel(this,'tronco','erecto')"><input type="radio" name="tronco"> Erecto (0°) — postura neutra <span class="score-option-pts">1 pt</span></label>
-              <label class="score-option" onclick="sel(this,'tronco','0-20')"><input type="radio" name="tronco"> Flexión 0–20° — leve inclinación hacia adelante <span class="score-option-pts">2 pt</span></label>
-              <label class="score-option" onclick="sel(this,'tronco','20-60')"><input type="radio" name="tronco"> Flexión 20–60° — inclinación moderada <span class="score-option-pts">3 pt</span></label>
-              <label class="score-option" onclick="sel(this,'tronco','>60')"><input type="radio" name="tronco"> Flexión &gt;60° o extensión — postura muy forzada <span class="score-option-pts">4 pt</span></label>
-            </div>
-            <div style="margin-top: 0.5rem;">
-              <label class="score-option" id="tronco-torsion-opt" onclick="toggle(this,'troncoTorsion')">
-                <input type="checkbox" id="troncoTorsion"> +1: Hay torsión de tronco o inclinación lateral
-                <span class="score-option-pts">+1 pt</span>
-              </label>
-            </div>
-          </div>
-
-          <div class="group-separator"></div>
-
-          <!-- CUELLO -->
-          <div class="score-group">
-            <div class="score-group-title">Cuello <span class="angle-hint">— Ángulo de flexión del cuello/cabeza</span></div>
-            <div class="score-options" id="cuello-opts">
-              <label class="score-option" onclick="sel(this,'cuello','0-20')"><input type="radio" name="cuello"> Flexión 0–20° — posición normal al trabajar <span class="score-option-pts">1 pt</span></label>
-              <label class="score-option" onclick="sel(this,'cuello','>20')"><input type="radio" name="cuello"> Flexión &gt;20° — cabeza muy inclinada hacia adelante <span class="score-option-pts">2 pt</span></label>
-              <label class="score-option" onclick="sel(this,'cuello','extension')"><input type="radio" name="cuello"> Extensión — cabeza inclinada hacia atrás <span class="score-option-pts">2 pt</span></label>
-            </div>
-            <div style="margin-top: 0.5rem;">
-              <label class="score-option" onclick="toggle(this,'cuelloTorsion')">
-                <input type="checkbox" id="cuelloTorsion"> +1: Hay torsión o inclinación lateral del cuello
-                <span class="score-option-pts">+1 pt</span>
-              </label>
-            </div>
-          </div>
-
-          <div class="group-separator"></div>
-
-          <!-- PIERNAS -->
-          <div class="score-group">
-            <div class="score-group-title">Piernas <span class="angle-hint">— Tipo de apoyo y flexión de rodillas</span></div>
-            <div class="score-options" id="piernas-opts">
-              <label class="score-option" onclick="sel(this,'piernas','bilateral')"><input type="radio" name="piernas"> Apoyo bilateral o sentado — postura estable <span class="score-option-pts">1 pt</span></label>
-              <label class="score-option" onclick="sel(this,'piernas','unilateral')"><input type="radio" name="piernas"> Apoyo unilateral o base inestable <span class="score-option-pts">2 pt</span></label>
-            </div>
-            <div class="score-group-subtitle" style="margin-top: 0.625rem;">Corrección: Flexión de rodilla</div>
-            <div class="score-options" id="piernas-flexion-opts">
-              <label class="score-option" onclick="sel(this,'piernasFlexion',null)"><input type="radio" name="piernasFlexion"> Sin flexión significativa <span class="score-option-pts">+0 pt</span></label>
-              <label class="score-option" onclick="sel(this,'piernasFlexion','30-60')"><input type="radio" name="piernasFlexion"> Flexión de rodilla 30–60° <span class="score-option-pts">+1 pt</span></label>
-              <label class="score-option" onclick="sel(this,'piernasFlexion','>60')"><input type="radio" name="piernasFlexion"> Flexión de rodilla &gt;60° (cuclillas) <span class="score-option-pts">+2 pt</span></label>
-            </div>
-          </div>
-
-          <div class="group-separator"></div>
-
-          <!-- CARGA/FUERZA -->
-          <div class="score-group">
-            <div class="score-group-title">Carga / Fuerza <span class="angle-hint">— Peso de la carga manipulada</span></div>
-            <div class="score-options" id="carga-opts">
-              <label class="score-option" onclick="sel(this,'carga','<5')"><input type="radio" name="carga"> Menos de 5 kg <span class="score-option-pts">0 pt</span></label>
-              <label class="score-option" onclick="sel(this,'carga','5-10')"><input type="radio" name="carga"> Entre 5 y 10 kg <span class="score-option-pts">+1 pt</span></label>
-              <label class="score-option" onclick="sel(this,'carga','>10')"><input type="radio" name="carga"> Más de 10 kg <span class="score-option-pts">+2 pt</span></label>
-            </div>
-            <div style="margin-top: 0.5rem;">
-              <label class="score-option" onclick="toggle(this,'instauracionRapida')">
-                <input type="checkbox" id="instauracionRapida"> +1: Fuerza brusca / instauración rápida (golpe o sacudida)
-                <span class="score-option-pts">+1 pt</span>
-              </label>
-            </div>
-          </div>
-
-          <!-- Resultado parcial Grupo A -->
-          <div class="alert alert-info mt-md">
-            <span class="alert-icon">🔢</span>
-            <div class="alert-body">
-              <span class="alert-title">Puntaje A (Tabla A + Carga):</span>
-              <span id="puntajeA-display" style="font-size:1.1rem; font-weight:800; margin-left:0.5rem;">—</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- GRUPO B -->
-        <div class="card fade-in mt-lg">
-          <div class="card-header">
-            <div class="card-icon card-icon-cyan">🔶</div>
-            <div>
-              <div class="card-title">Grupo B — Brazo, Antebrazo y Muñeca</div>
-              <div class="card-subtitle">Segmentos de las extremidades superiores + acoplamiento</div>
-            </div>
-          </div>
-
-          <!-- BRAZO -->
-          <div class="score-group">
-            <div class="score-group-title">Brazo Superior <span class="angle-hint">— Ángulo de flexión del hombro</span></div>
-            <div class="score-options" id="brazo-opts">
-              <label class="score-option" onclick="sel(this,'brazo','<20')"><input type="radio" name="brazo"> Flexión &lt;20° — brazo casi vertical junto al cuerpo <span class="score-option-pts">1 pt</span></label>
-              <label class="score-option" onclick="sel(this,'brazo','20-45')"><input type="radio" name="brazo"> Flexión 20–45° — brazo ligeramente elevado <span class="score-option-pts">2 pt</span></label>
-              <label class="score-option" onclick="sel(this,'brazo','45-90')"><input type="radio" name="brazo"> Flexión 45–90° — brazo moderadamente elevado <span class="score-option-pts">3 pt</span></label>
-              <label class="score-option" onclick="sel(this,'brazo','>90')"><input type="radio" name="brazo"> Flexión &gt;90° — brazo muy elevado <span class="score-option-pts">4 pt</span></label>
-            </div>
-            <div style="margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.375rem;">
-              <label class="score-option" onclick="toggle(this,'brazoAbduccion')"><input type="checkbox" id="brazoAbduccion"> +1: Hombro en abducción o rotación <span class="score-option-pts">+1 pt</span></label>
-              <label class="score-option" onclick="toggle(this,'brazoHombro')"><input type="checkbox" id="brazoHombro"> +1: Hombro elevado (encogido) <span class="score-option-pts">+1 pt</span></label>
-              <label class="score-option" onclick="toggle(this,'brazoApoyo')"><input type="checkbox" id="brazoApoyo"> −1: Brazo con apoyo o asistencia de gravedad <span class="score-option-pts">−1 pt</span></label>
-            </div>
-          </div>
-
-          <div class="group-separator"></div>
-
-          <!-- ANTEBRAZO -->
-          <div class="score-group">
-            <div class="score-group-title">Antebrazo <span class="angle-hint">— Ángulo de flexión del codo</span></div>
-            <div class="score-options" id="antebrazo-opts">
-              <label class="score-option" onclick="sel(this,'antebrazo','60-100')"><input type="radio" name="antebrazo"> Flexión 60–100° — rango óptimo de trabajo <span class="score-option-pts">1 pt</span></label>
-              <label class="score-option" onclick="sel(this,'antebrazo','fuera')"><input type="radio" name="antebrazo"> Flexión &lt;60° o &gt;100° — fuera del rango óptimo <span class="score-option-pts">2 pt</span></label>
-            </div>
-          </div>
-
-          <div class="group-separator"></div>
-
-          <!-- MUÑECA -->
-          <div class="score-group">
-            <div class="score-group-title">Muñeca <span class="angle-hint">— Ángulo de flexión/extensión de la muñeca</span></div>
-            <div class="score-options" id="muneca-opts">
-              <label class="score-option" onclick="sel(this,'muneca','0-15')"><input type="radio" name="muneca"> Flexión/extensión 0–15° — posición casi neutra <span class="score-option-pts">1 pt</span></label>
-              <label class="score-option" onclick="sel(this,'muneca','>15')"><input type="radio" name="muneca"> Flexión/extensión &gt;15° — postura forzada de muñeca <span class="score-option-pts">2 pt</span></label>
-            </div>
-            <div style="margin-top: 0.5rem;">
-              <label class="score-option" onclick="toggle(this,'munecaDesviacion')">
-                <input type="checkbox" id="munecaDesviacion"> +1: Hay desviación radial o cubital de la muñeca
-                <span class="score-option-pts">+1 pt</span>
-              </label>
-            </div>
-          </div>
-
-          <div class="group-separator"></div>
-
-          <!-- ACOPLAMIENTO -->
-          <div class="score-group">
-            <div class="score-group-title">Acoplamiento / Agarre <span class="angle-hint">— Calidad del agarre sobre el objeto</span></div>
-            <div class="score-options" id="acoplamiento-opts">
-              <label class="score-option" onclick="sel(this,'acoplamiento','bueno')"><input type="radio" name="acoplamiento"> Bueno — agarre y fuerza adecuados; mango bien ajustado en rango medio <span class="score-option-pts">0 pt</span></label>
-              <label class="score-option" onclick="sel(this,'acoplamiento','regular')"><input type="radio" name="acoplamiento"> Regular — agarre aceptable pero no ideal <span class="score-option-pts">+1 pt</span></label>
-              <label class="score-option" onclick="sel(this,'acoplamiento','malo')"><input type="radio" name="acoplamiento"> Malo — agarre no aceptable, aunque posible sostener <span class="score-option-pts">+2 pt</span></label>
-              <label class="score-option" onclick="sel(this,'acoplamiento','inaceptable')"><input type="radio" name="acoplamiento"> Inaceptable — sin mango, agarre incómodo o imposible <span class="score-option-pts">+3 pt</span></label>
-            </div>
-          </div>
-
-          <!-- Resultado parcial Grupo B -->
-          <div class="alert alert-info mt-md">
-            <span class="alert-icon">🔢</span>
-            <div class="alert-body">
-              <span class="alert-title">Puntaje B (Tabla B + Acoplamiento):</span>
-              <span id="puntajeB-display" style="font-size:1.1rem; font-weight:800; margin-left:0.5rem;">—</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- ACTIVIDAD -->
-        <div class="card fade-in mt-lg">
-          <div class="card-header">
-            <div class="card-icon card-icon-warn">⚡</div>
-            <div>
-              <div class="card-title">Puntaje de Actividad Muscular</div>
-              <div class="card-subtitle">Se suman al resultado final de la Tabla C. Máximo +3.</div>
-            </div>
-          </div>
-          <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-            <label class="score-option" onclick="toggle(this,'actEstatica')">
-              <input type="checkbox" id="actEstatica">
-              <div>
-                <strong>Postura estática</strong>
-                <div class="form-hint">Una o más partes del cuerpo permanecen estáticas durante más de 1 minuto</div>
-              </div>
-              <span class="score-option-pts" style="margin-left:auto; flex-shrink:0;">+1 pt</span>
-            </label>
-            <label class="score-option" onclick="toggle(this,'actRepeticion')">
-              <input type="checkbox" id="actRepeticion">
-              <div>
-                <strong>Movimiento repetitivo</strong>
-                <div class="form-hint">Acciones repetidas más de 4 veces por minuto (no cuenta caminar solo)</div>
-              </div>
-              <span class="score-option-pts" style="margin-left:auto; flex-shrink:0;">+1 pt</span>
-            </label>
-            <label class="score-option" onclick="toggle(this,'actCambioBrusco')">
-              <input type="checkbox" id="actCambioBrusco">
-              <div>
-                <strong>Cambios bruscos / Base inestable</strong>
-                <div class="form-hint">La acción causa cambios posturales rápidos o la base de apoyo es inestable</div>
-              </div>
-              <span class="score-option-pts" style="margin-left:auto; flex-shrink:0;">+1 pt</span>
-            </label>
-          </div>
-        </div>
-
-        <!-- TABLA DE REFERENCIA -->
-        <div class="card fade-in mt-lg">
-          <div class="card-header">
-            <div class="card-icon card-icon-primary">📋</div>
-            <div>
-              <div class="card-title">Escala de Riesgo REBA</div>
-              <div class="card-subtitle">Referencia de interpretación</div>
-            </div>
-          </div>
-          <table class="risk-table">
-            <thead>
-              <tr><th>Puntaje</th><th>Nivel</th><th>Riesgo</th><th>Respuesta mínima</th></tr>
-            </thead>
-            <tbody>
-              <tr><td><strong>1</strong></td><td>0</td><td><span class="risk-badge inapreciable">Inapreciable</span></td><td>Sin acción específica</td></tr>
-              <tr><td><strong>2–3</strong></td><td>1</td><td><span class="risk-badge bajo">Bajo</span></td><td>Puede ser necesaria alguna medida</td></tr>
-              <tr><td><strong>4–7</strong></td><td>2</td><td><span class="risk-badge medio">Medio</span></td><td>Acción necesaria</td></tr>
-              <tr><td><strong>8–10</strong></td><td>3</td><td><span class="risk-badge alto">Alto</span></td><td>Acción necesaria pronto</td></tr>
-              <tr><td><strong>11–15</strong></td><td>4</td><td><span class="risk-badge muy-alto">Muy Alto</span></td><td>Actuación inmediata</td></tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="form-navigation">
-          <a href="identificacion.html" class="btn btn-secondary">← Módulo anterior</a>
-          <button type="button" class="btn btn-primary btn-lg" onclick="guardarYContinuar()">
-            Continuar a RULA →
-          </button>
-        </div>
-      </div>
-
-      <!-- COLUMNA DERECHA: Resultado en tiempo real -->
-      <div>
-        <div class="score-display">
-          <div class="score-display-label">Puntaje REBA Final</div>
-          <div class="score-display-value" id="puntaje-final">—</div>
-          <div class="score-display-level level-0" id="nivel-display">Seleccione las opciones</div>
-          <div class="score-display-action" id="accion-display"></div>
-
-          <div class="score-breakdown" id="score-breakdown" style="display:none;">
-            <div class="score-row"><span class="score-row-label">Tabla A</span><span class="score-row-val" id="br-tablaA">—</span></div>
-            <div class="score-row"><span class="score-row-label">+ Carga/Fuerza</span><span class="score-row-val" id="br-carga">—</span></div>
-            <div class="score-row"><span class="score-row-label">= Puntaje A</span><span class="score-row-val" id="br-pA">—</span></div>
-            <div class="score-row"><span class="score-row-label">Tabla B</span><span class="score-row-val" id="br-tablaB">—</span></div>
-            <div class="score-row"><span class="score-row-label">+ Acoplamiento</span><span class="score-row-val" id="br-acop">—</span></div>
-            <div class="score-row"><span class="score-row-label">= Puntaje B</span><span class="score-row-val" id="br-pB">—</span></div>
-            <div class="score-row"><span class="score-row-label">Tabla C</span><span class="score-row-val" id="br-tablaC">—</span></div>
-            <div class="score-row"><span class="score-row-label">+ Actividad</span><span class="score-row-val" id="br-act">—</span></div>
-            <div class="score-row" style="border-top:1px solid var(--clr-primary-light);"><span class="score-row-label" style="font-weight:700;color:var(--clr-text-primary)">TOTAL REBA</span><span class="score-row-val" style="color:var(--clr-primary-light)" id="br-total">—</span></div>
-          </div>
-        </div>
-
-        <div class="card mt-lg" style="padding: 1rem;">
-          <div style="font-size:0.8rem; color:var(--clr-text-muted); line-height:1.6;">
-            <strong style="color:var(--clr-text-secondary);">💡 Regla de oro:</strong><br>
-            La puntuación debe poder reconstruirse. Otra persona debe verificar la fotografía y llegar al mismo resultado.
-          </div>
-        </div>
-      </div>
-    </div>
-  </main>
-</div>
-
-<script>
-  SIGA.init('reba');
-  document.getElementById('sidebar-root').innerHTML = renderSidebar('reba');
-
-  // Estado local
-  const datos = {
-    tronco: null, troncoTorsion: false,
-    cuello: null, cuelloTorsion: false,
-    piernas: null, piernasFlexion: null,
-    carga: null, instauracionRapida: false,
-    brazo: null, brazoAbduccion: false, brazoHombro: false, brazoApoyo: false,
-    antebrazo: null, muneca: null, munecaDesviacion: false,
-    acoplamiento: null,
-    actEstatica: false, actRepeticion: false, actCambioBrusco: false
-  };
-
-  // Cargar datos guardados
-  const savedReba = SIGA.state.reba;
-  if (savedReba) Object.assign(datos, savedReba);
-
-  function sel(el, campo, valor) {
-    // Desseleccionar hermanos
-    el.closest('.score-options').querySelectorAll('.score-option').forEach(o => o.classList.remove('selected'));
-    el.classList.add('selected');
-    datos[campo] = valor;
-    calcular();
-  }
-
-  function toggle(el, campo) {
-    const cb = el.querySelector('input[type="checkbox"]');
-    datos[campo] = cb.checked;
-    el.classList.toggle('selected', cb.checked);
-    calcular();
-  }
-
-  function calcular() {
-    // Necesitamos al menos tronco, cuello, piernas para Grupo A
-    if (!datos.tronco || !datos.cuello || !datos.piernas) {
-      document.getElementById('puntajeA-display').textContent = '—';
-    }
-    if (!datos.brazo || !datos.antebrazo || !datos.muneca || datos.acoplamiento === null) {
-      document.getElementById('puntajeB-display').textContent = '—';
-    }
-
-    const camposA = datos.tronco && datos.cuello && datos.piernas && datos.carga !== null;
-    const camposB = datos.brazo && datos.antebrazo && datos.muneca && datos.acoplamiento !== null;
-
-    if (!camposA || !camposB) return;
-
-    const res = REBA.calcular(datos);
-
-    // Actualizar displays parciales
-    document.getElementById('puntajeA-display').textContent = res.puntuacionA;
-    document.getElementById('puntajeB-display').textContent = res.puntuacionB;
-
-    // Resultado final
-    document.getElementById('puntaje-final').textContent = res.puntuacionFinal;
-    const nivelEl = document.getElementById('nivel-display');
-    nivelEl.className = `score-display-level ${res.clase}`;
-    nivelEl.textContent = `Nivel ${res.nivel} — Riesgo ${res.riesgo}`;
-    document.getElementById('accion-display').textContent = res.accion;
-
-    // Breakdown
-    document.getElementById('score-breakdown').style.display = 'flex';
-    document.getElementById('br-tablaA').textContent = res.tablaA;
-    document.getElementById('br-carga').textContent = '+' + res.segmentos.carga;
-    document.getElementById('br-pA').textContent = res.puntuacionA;
-    document.getElementById('br-tablaB').textContent = res.tablaB;
-    document.getElementById('br-acop').textContent = '+' + res.segmentos.acoplamiento;
-    document.getElementById('br-pB').textContent = res.puntuacionB;
-    document.getElementById('br-tablaC').textContent = res.tablaC;
-    document.getElementById('br-act').textContent = '+' + res.sActividad;
-    document.getElementById('br-total').textContent = res.puntuacionFinal;
-  }
-
-  function resetReba() {
-    if (confirm('¿Reiniciar todos los campos de REBA?')) location.reload();
-  }
-
-  function guardarYContinuar() {
-    const camposA = datos.tronco && datos.cuello && datos.piernas && datos.carga !== null;
-    const camposB = datos.brazo && datos.antebrazo && datos.muneca && datos.acoplamiento !== null;
-    if (!camposA || !camposB) {
-      SIGA.showToast('Complete todos los campos de Grupo A y B', 'error'); return;
-    }
-    const res = REBA.calcular(datos);
-    SIGA.state.reba = { ...datos, ...res };
-    SIGA.state.progreso.reba = true;
-    SIGA.save();
-    SIGA.showToast(`REBA guardado — Puntaje: ${res.puntuacionFinal} (${res.riesgo}) ✓`);
-    setTimeout(() => window.location.href = 'rula.html', 800);
-  }
-
-  // Restaurar selecciones guardadas
-  function restaurar() {
-    const mapOpts = {
-      'tronco': datos.tronco, 'cuello': datos.cuello,
-      'piernas': datos.piernas, 'piernasFlexion': datos.piernasFlexion,
-      'carga': datos.carga, 'brazo': datos.brazo,
-      'antebrazo': datos.antebrazo, 'muneca': datos.muneca,
-      'acoplamiento': datos.acoplamiento
-    };
-    Object.entries(mapOpts).forEach(([campo, val]) => {
-      if (val === null || val === undefined) return;
-      document.querySelectorAll(`[onclick*="sel(this,'${campo}'"]`).forEach(el => {
-        if (el.getAttribute('onclick').includes(`'${val}'`)) el.classList.add('selected');
-      });
-    });
-    const checkboxes = ['troncoTorsion','cuelloTorsion','instauracionRapida','brazoAbduccion',
-                        'brazoHombro','brazoApoyo','munecaDesviacion','actEstatica','actRepeticion','actCambioBrusco'];
-    checkboxes.forEach(id => {
-      const el = document.getElementById(id);
-      if (el && datos[id]) {
-        el.checked = true;
-        el.closest('.score-option')?.classList.add('selected');
+    <style>
+      .reba-layout {
+        display: grid;
+        grid-template-columns: 1fr 300px;
+        gap: 1.5rem;
+        align-items: start;
       }
-    });
-    calcular();
-  }
+      .group-separator {
+        height: 2px;
+        background: linear-gradient(
+          to right,
+          var(--clr-primary-glow),
+          transparent
+        );
+        margin: 1.5rem 0;
+        border-radius: 9999px;
+      }
+      .angle-hint {
+        font-size: 0.72rem;
+        color: var(--clr-text-muted);
+        font-style: italic;
+      }
+      @media (max-width: 900px) {
+        .reba-layout {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+    <link rel="stylesheet" href="/css/responsive.css" />
+    <meta name="theme-color" content="#151b2e" />
+  </head>
+  <body data-page="reba">
+    <div class="app-layout">
+      <div id="sidebar-root"></div>
 
-  document.addEventListener('DOMContentLoaded', () => { setTimeout(restaurar, 50); });
-</script>
-</body>
+      <main class="main-content">
+        <div class="topbar">
+          <div class="topbar-breadcrumb">
+            <a href="../index.html">🏠 Inicio</a>
+            <span>/</span>
+            <a href="identificacion.html">Identificación</a>
+            <span>/</span>
+            <span class="current">REBA</span>
+          </div>
+          <div class="topbar-actions">
+            <button class="btn btn-secondary btn-sm" data-action="save">
+              💾 Guardar
+            </button>
+            <button class="btn btn-secondary btn-sm" data-action="reset">
+              🔄 Reiniciar
+            </button>
+          </div>
+        </div>
+
+        <div class="page-header fade-in">
+          <p class="page-tag">🏋️ Módulo 2 de 4</p>
+          <h1>Calculadora REBA</h1>
+          <p>
+            Rapid Entire Body Assessment — Evaluación ergonómica del cuerpo
+            entero. El puntaje se calcula automáticamente mientras selecciona
+            las opciones.
+          </p>
+        </div>
+
+        <div class="stepper fade-in">
+          <div class="step done"><div class="step-circle">✓</div></div>
+          <div class="step-line done"></div>
+          <div class="step active">
+            <div class="step-circle">2</div>
+            <span class="step-label">REBA</span>
+          </div>
+          <div class="step-line"></div>
+          <div class="step"><div class="step-circle">3</div></div>
+          <div class="step-line"></div>
+          <div class="step"><div class="step-circle">4</div></div>
+        </div>
+
+        <div class="reba-layout">
+          <!-- COLUMNA IZQUIERDA: Formulario -->
+          <div>
+            <!-- GRUPO A -->
+            <div class="card fade-in">
+              <div class="card-header">
+                <div class="card-icon card-icon-primary">🔷</div>
+                <div>
+                  <div class="card-title">
+                    Grupo A — Tronco, Cuello y Piernas
+                  </div>
+                  <div class="card-subtitle">
+                    Segmentos del eje corporal principal + carga/fuerza
+                  </div>
+                </div>
+              </div>
+
+              <!-- TRONCO -->
+              <div class="score-group">
+                <div class="score-group-title">
+                  Tronco
+                  <span class="angle-hint"
+                    >— Ángulo de flexión/extensión del tronco</span
+                  >
+                </div>
+                <div class="score-options" id="tronco-opts">
+                  <label
+                    class="score-option"
+                    data-field="tronco"
+                    data-value="erecto"
+                    ><input type="radio" name="tronco" /> Erecto (0°) — postura
+                    neutra <span class="score-option-pts">1 pt</span></label
+                  >
+                  <label
+                    class="score-option"
+                    data-field="tronco"
+                    data-value="0-20"
+                    ><input type="radio" name="tronco" /> Flexión 0–20° — leve
+                    inclinación hacia adelante
+                    <span class="score-option-pts">2 pt</span></label
+                  >
+                  <label
+                    class="score-option"
+                    data-field="tronco"
+                    data-value="20-60"
+                    ><input type="radio" name="tronco" /> Flexión 20–60° —
+                    inclinación moderada
+                    <span class="score-option-pts">3 pt</span></label
+                  >
+                  <label
+                    class="score-option"
+                    data-field="tronco"
+                    data-value="&gt;60"
+                    ><input type="radio" name="tronco" /> Flexión &gt;60° —
+                    postura muy forzada
+                    <span class="score-option-pts">4 pt</span></label
+                  >
+                  <label
+                    class="score-option"
+                    data-field="tronco"
+                    data-value="extension&gt;20"
+                    ><input type="radio" name="tronco" /> Extensión mayor de 20°
+                    <span class="score-option-pts">3 pt</span></label
+                  >
+                </div>
+                <div style="margin-top: 0.5rem">
+                  <label
+                    class="score-option"
+                    id="tronco-torsion-opt"
+                    data-toggle="troncoTorsion"
+                  >
+                    <input type="checkbox" id="troncoTorsion" /> +1: Hay torsión
+                    de tronco o inclinación lateral
+                    <span class="score-option-pts">+1 pt</span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="group-separator"></div>
+
+              <!-- CUELLO -->
+              <div class="score-group">
+                <div class="score-group-title">
+                  Cuello
+                  <span class="angle-hint"
+                    >— Ángulo de flexión del cuello/cabeza</span
+                  >
+                </div>
+                <div class="score-options" id="cuello-opts">
+                  <label
+                    class="score-option"
+                    data-field="cuello"
+                    data-value="0-20"
+                    ><input type="radio" name="cuello" /> Flexión 0–20° —
+                    posición normal al trabajar
+                    <span class="score-option-pts">1 pt</span></label
+                  >
+                  <label
+                    class="score-option"
+                    data-field="cuello"
+                    data-value="&gt;20"
+                    ><input type="radio" name="cuello" /> Flexión &gt;20° —
+                    cabeza muy inclinada hacia adelante
+                    <span class="score-option-pts">2 pt</span></label
+                  >
+                  <label
+                    class="score-option"
+                    data-field="cuello"
+                    data-value="extension"
+                    ><input type="radio" name="cuello" /> Extensión — cabeza
+                    inclinada hacia atrás
+                    <span class="score-option-pts">2 pt</span></label
+                  >
+                </div>
+                <div style="margin-top: 0.5rem">
+                  <label class="score-option" data-toggle="cuelloTorsion">
+                    <input type="checkbox" id="cuelloTorsion" /> +1: Hay torsión
+                    o inclinación lateral del cuello
+                    <span class="score-option-pts">+1 pt</span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="group-separator"></div>
+
+              <!-- PIERNAS -->
+              <div class="score-group">
+                <div class="score-group-title">
+                  Piernas
+                  <span class="angle-hint"
+                    >— Tipo de apoyo y flexión de rodillas</span
+                  >
+                </div>
+                <div class="score-options" id="piernas-opts">
+                  <label
+                    class="score-option"
+                    data-field="piernas"
+                    data-value="bilateral"
+                    ><input type="radio" name="piernas" /> Apoyo bilateral de
+                    pie — postura estable
+                    <span class="score-option-pts">1 pt</span></label
+                  >
+                  <label
+                    class="score-option"
+                    data-field="piernas"
+                    data-value="unilateral"
+                    ><input type="radio" name="piernas" /> Apoyo unilateral o
+                    base inestable
+                    <span class="score-option-pts">2 pt</span></label
+                  >
+                  <label
+                    class="score-option"
+                    data-field="piernas"
+                    data-value="sentado"
+                    ><input type="radio" name="piernas" /> Sentado (sin
+                    incremento por flexión de rodillas)
+                    <span class="score-option-pts">1 pt</span></label
+                  >
+                </div>
+                <div class="score-group-subtitle" style="margin-top: 0.625rem">
+                  Corrección: Flexión de rodilla
+                </div>
+                <div class="score-options" id="piernas-flexion-opts">
+                  <label
+                    class="score-option"
+                    data-field="piernasFlexion"
+                    data-value="ninguna"
+                    ><input type="radio" name="piernasFlexion" /> Sin flexión
+                    significativa
+                    <span class="score-option-pts">+0 pt</span></label
+                  >
+                  <label
+                    class="score-option"
+                    data-field="piernasFlexion"
+                    data-value="30-60"
+                    ><input type="radio" name="piernasFlexion" /> Flexión de
+                    rodilla 30–60°
+                    <span class="score-option-pts">+1 pt</span></label
+                  >
+                  <label
+                    class="score-option"
+                    data-field="piernasFlexion"
+                    data-value="&gt;60"
+                    ><input type="radio" name="piernasFlexion" /> Flexión de
+                    rodilla &gt;60° (cuclillas)
+                    <span class="score-option-pts">+2 pt</span></label
+                  >
+                </div>
+              </div>
+
+              <div class="group-separator"></div>
+
+              <!-- CARGA/FUERZA -->
+              <div class="score-group">
+                <div class="score-group-title">
+                  Carga / Fuerza
+                  <span class="angle-hint">— Peso de la carga manipulada</span>
+                </div>
+                <div class="score-options" id="carga-opts">
+                  <label
+                    class="score-option"
+                    data-field="carga"
+                    data-value="&lt;5"
+                    ><input type="radio" name="carga" /> Menos de 5 kg
+                    <span class="score-option-pts">0 pt</span></label
+                  >
+                  <label
+                    class="score-option"
+                    data-field="carga"
+                    data-value="5-10"
+                    ><input type="radio" name="carga" /> Entre 5 y 10 kg
+                    <span class="score-option-pts">+1 pt</span></label
+                  >
+                  <label
+                    class="score-option"
+                    data-field="carga"
+                    data-value="&gt;10"
+                    ><input type="radio" name="carga" /> Más de 10 kg
+                    <span class="score-option-pts">+2 pt</span></label
+                  >
+                </div>
+                <div style="margin-top: 0.5rem">
+                  <label class="score-option" data-toggle="instauracionRapida">
+                    <input type="checkbox" id="instauracionRapida" /> +1: Fuerza
+                    brusca / instauración rápida (golpe o sacudida)
+                    <span class="score-option-pts">+1 pt</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Resultado parcial Grupo A -->
+              <div class="alert alert-info mt-md">
+                <span class="alert-icon">🔢</span>
+                <div class="alert-body">
+                  <span class="alert-title">Puntaje A (Tabla A + Carga):</span>
+                  <span
+                    id="puntajeA-display"
+                    style="
+                      font-size: 1.1rem;
+                      font-weight: 800;
+                      margin-left: 0.5rem;
+                    "
+                    >—</span
+                  >
+                </div>
+              </div>
+            </div>
+
+            <!-- GRUPO B -->
+            <div class="card fade-in mt-lg">
+              <div class="card-header">
+                <div class="card-icon card-icon-cyan">🔶</div>
+                <div>
+                  <div class="card-title">
+                    Grupo B — Brazo, Antebrazo y Muñeca
+                  </div>
+                  <div class="card-subtitle">
+                    Segmentos de las extremidades superiores + acoplamiento
+                  </div>
+                </div>
+              </div>
+
+              <!-- BRAZO -->
+              <div class="score-group">
+                <div class="score-group-title">
+                  Brazo Superior
+                  <span class="angle-hint">— Ángulo de flexión del hombro</span>
+                </div>
+                <div class="score-options" id="brazo-opts">
+                  <label
+                    class="score-option"
+                    data-field="brazo"
+                    data-value="&lt;20"
+                    ><input type="radio" name="brazo" /> Flexión &lt;20° — brazo
+                    casi vertical junto al cuerpo
+                    <span class="score-option-pts">1 pt</span></label
+                  >
+                  <label
+                    class="score-option"
+                    data-field="brazo"
+                    data-value="20-45"
+                    ><input type="radio" name="brazo" /> Flexión 20–45° — brazo
+                    ligeramente elevado
+                    <span class="score-option-pts">2 pt</span></label
+                  >
+                  <label
+                    class="score-option"
+                    data-field="brazo"
+                    data-value="45-90"
+                    ><input type="radio" name="brazo" /> Flexión 45–90° — brazo
+                    moderadamente elevado
+                    <span class="score-option-pts">3 pt</span></label
+                  >
+                  <label
+                    class="score-option"
+                    data-field="brazo"
+                    data-value="&gt;90"
+                    ><input type="radio" name="brazo" /> Flexión &gt;90° — brazo
+                    muy elevado
+                    <span class="score-option-pts">4 pt</span></label
+                  >
+                  <label
+                    class="score-option"
+                    data-field="brazo"
+                    data-value="extension&gt;20"
+                    ><input type="radio" name="brazo" /> Extensión mayor de 20°
+                    <span class="score-option-pts">2 pt</span></label
+                  >
+                </div>
+                <div
+                  style="
+                    margin-top: 0.5rem;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 0.375rem;
+                  "
+                >
+                  <label class="score-option" data-toggle="brazoAbduccion"
+                    ><input type="checkbox" id="brazoAbduccion" /> +1: Hombro en
+                    abducción o rotación
+                    <span class="score-option-pts">+1 pt</span></label
+                  >
+                  <label class="score-option" data-toggle="brazoHombro"
+                    ><input type="checkbox" id="brazoHombro" /> +1: Hombro
+                    elevado (encogido)
+                    <span class="score-option-pts">+1 pt</span></label
+                  >
+                  <label class="score-option" data-toggle="brazoApoyo"
+                    ><input type="checkbox" id="brazoApoyo" /> −1: Brazo con
+                    apoyo o asistencia de gravedad
+                    <span class="score-option-pts">−1 pt</span></label
+                  >
+                </div>
+              </div>
+
+              <div class="group-separator"></div>
+
+              <!-- ANTEBRAZO -->
+              <div class="score-group">
+                <div class="score-group-title">
+                  Antebrazo
+                  <span class="angle-hint">— Ángulo de flexión del codo</span>
+                </div>
+                <div class="score-options" id="antebrazo-opts">
+                  <label
+                    class="score-option"
+                    data-field="antebrazo"
+                    data-value="60-100"
+                    ><input type="radio" name="antebrazo" /> Flexión 60–100° —
+                    rango óptimo de trabajo
+                    <span class="score-option-pts">1 pt</span></label
+                  >
+                  <label
+                    class="score-option"
+                    data-field="antebrazo"
+                    data-value="fuera"
+                    ><input type="radio" name="antebrazo" /> Flexión &lt;60° o
+                    &gt;100° — fuera del rango óptimo
+                    <span class="score-option-pts">2 pt</span></label
+                  >
+                </div>
+              </div>
+
+              <div class="group-separator"></div>
+
+              <!-- MUÑECA -->
+              <div class="score-group">
+                <div class="score-group-title">
+                  Muñeca
+                  <span class="angle-hint"
+                    >— Ángulo de flexión/extensión de la muñeca</span
+                  >
+                </div>
+                <div class="score-options" id="muneca-opts">
+                  <label
+                    class="score-option"
+                    data-field="muneca"
+                    data-value="0-15"
+                    ><input type="radio" name="muneca" /> Flexión/extensión
+                    0–15° — posición casi neutra
+                    <span class="score-option-pts">1 pt</span></label
+                  >
+                  <label
+                    class="score-option"
+                    data-field="muneca"
+                    data-value="&gt;15"
+                    ><input type="radio" name="muneca" /> Flexión/extensión
+                    &gt;15° — postura forzada de muñeca
+                    <span class="score-option-pts">2 pt</span></label
+                  >
+                </div>
+                <div style="margin-top: 0.5rem">
+                  <label class="score-option" data-toggle="munecaDesviacion">
+                    <input type="checkbox" id="munecaDesviacion" /> +1: Hay
+                    desviación radial o cubital de la muñeca
+                    <span class="score-option-pts">+1 pt</span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="group-separator"></div>
+
+              <!-- ACOPLAMIENTO -->
+              <div class="score-group">
+                <div class="score-group-title">
+                  Acoplamiento / Agarre
+                  <span class="angle-hint"
+                    >— Calidad del agarre sobre el objeto</span
+                  >
+                </div>
+                <div class="score-options" id="acoplamiento-opts">
+                  <label
+                    class="score-option"
+                    data-field="acoplamiento"
+                    data-value="bueno"
+                    ><input type="radio" name="acoplamiento" /> Bueno — agarre y
+                    fuerza adecuados; mango bien ajustado en rango medio
+                    <span class="score-option-pts">0 pt</span></label
+                  >
+                  <label
+                    class="score-option"
+                    data-field="acoplamiento"
+                    data-value="regular"
+                    ><input type="radio" name="acoplamiento" /> Regular — agarre
+                    aceptable pero no ideal
+                    <span class="score-option-pts">+1 pt</span></label
+                  >
+                  <label
+                    class="score-option"
+                    data-field="acoplamiento"
+                    data-value="malo"
+                    ><input type="radio" name="acoplamiento" /> Malo — agarre no
+                    aceptable, aunque posible sostener
+                    <span class="score-option-pts">+2 pt</span></label
+                  >
+                  <label
+                    class="score-option"
+                    data-field="acoplamiento"
+                    data-value="inaceptable"
+                    ><input type="radio" name="acoplamiento" /> Inaceptable —
+                    sin mango, agarre incómodo o imposible
+                    <span class="score-option-pts">+3 pt</span></label
+                  >
+                </div>
+              </div>
+
+              <!-- Resultado parcial Grupo B -->
+              <div class="alert alert-info mt-md">
+                <span class="alert-icon">🔢</span>
+                <div class="alert-body">
+                  <span class="alert-title"
+                    >Puntaje B (Tabla B + Acoplamiento):</span
+                  >
+                  <span
+                    id="puntajeB-display"
+                    style="
+                      font-size: 1.1rem;
+                      font-weight: 800;
+                      margin-left: 0.5rem;
+                    "
+                    >—</span
+                  >
+                </div>
+              </div>
+            </div>
+
+            <!-- ACTIVIDAD -->
+            <div class="card fade-in mt-lg">
+              <div class="card-header">
+                <div class="card-icon card-icon-warn">⚡</div>
+                <div>
+                  <div class="card-title">Puntaje de Actividad Muscular</div>
+                  <div class="card-subtitle">
+                    Se suman al resultado final de la Tabla C. Máximo +3.
+                  </div>
+                </div>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 0.5rem">
+                <label class="score-option" data-toggle="actEstatica">
+                  <input type="checkbox" id="actEstatica" />
+                  <div>
+                    <strong>Postura estática</strong>
+                    <div class="form-hint">
+                      Una o más partes del cuerpo permanecen estáticas durante
+                      más de 1 minuto
+                    </div>
+                  </div>
+                  <span
+                    class="score-option-pts"
+                    style="margin-left: auto; flex-shrink: 0"
+                    >+1 pt</span
+                  >
+                </label>
+                <label class="score-option" data-toggle="actRepeticion">
+                  <input type="checkbox" id="actRepeticion" />
+                  <div>
+                    <strong>Movimiento repetitivo</strong>
+                    <div class="form-hint">
+                      Acciones repetidas más de 4 veces por minuto (no cuenta
+                      caminar solo)
+                    </div>
+                  </div>
+                  <span
+                    class="score-option-pts"
+                    style="margin-left: auto; flex-shrink: 0"
+                    >+1 pt</span
+                  >
+                </label>
+                <label class="score-option" data-toggle="actCambioBrusco">
+                  <input type="checkbox" id="actCambioBrusco" />
+                  <div>
+                    <strong>Cambios bruscos / Base inestable</strong>
+                    <div class="form-hint">
+                      La acción causa cambios posturales rápidos o la base de
+                      apoyo es inestable
+                    </div>
+                  </div>
+                  <span
+                    class="score-option-pts"
+                    style="margin-left: auto; flex-shrink: 0"
+                    >+1 pt</span
+                  >
+                </label>
+              </div>
+            </div>
+
+            <!-- TABLA DE REFERENCIA -->
+            <div class="card fade-in mt-lg">
+              <div class="card-header">
+                <div class="card-icon card-icon-primary">📋</div>
+                <div>
+                  <div class="card-title">Escala de Riesgo REBA</div>
+                  <div class="card-subtitle">Referencia de interpretación</div>
+                </div>
+              </div>
+              <table class="risk-table">
+                <thead>
+                  <tr>
+                    <th>Puntaje</th>
+                    <th>Nivel</th>
+                    <th>Riesgo</th>
+                    <th>Respuesta mínima</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>1</strong></td>
+                    <td>0</td>
+                    <td>
+                      <span class="risk-badge inapreciable">Inapreciable</span>
+                    </td>
+                    <td>Sin acción específica</td>
+                  </tr>
+                  <tr>
+                    <td><strong>2–3</strong></td>
+                    <td>1</td>
+                    <td><span class="risk-badge bajo">Bajo</span></td>
+                    <td>Puede ser necesaria alguna medida</td>
+                  </tr>
+                  <tr>
+                    <td><strong>4–7</strong></td>
+                    <td>2</td>
+                    <td><span class="risk-badge medio">Medio</span></td>
+                    <td>Acción necesaria</td>
+                  </tr>
+                  <tr>
+                    <td><strong>8–10</strong></td>
+                    <td>3</td>
+                    <td><span class="risk-badge alto">Alto</span></td>
+                    <td>Acción necesaria pronto</td>
+                  </tr>
+                  <tr>
+                    <td><strong>11–15</strong></td>
+                    <td>4</td>
+                    <td><span class="risk-badge muy-alto">Muy Alto</span></td>
+                    <td>Actuación inmediata</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="form-navigation">
+              <a href="identificacion.html" class="btn btn-secondary"
+                >← Módulo anterior</a
+              >
+              <button
+                type="button"
+                class="btn btn-primary btn-lg"
+                data-action="continue"
+              >
+                Continuar a RULA →
+              </button>
+            </div>
+          </div>
+
+          <!-- COLUMNA DERECHA: Resultado en tiempo real -->
+          <div>
+            <div class="score-display">
+              <div class="score-display-label">Puntaje REBA Final</div>
+              <div class="score-display-value" id="puntaje-final">—</div>
+              <div class="score-display-level level-0" id="nivel-display">
+                Seleccione las opciones
+              </div>
+              <div class="score-display-action" id="accion-display"></div>
+
+              <div
+                class="score-breakdown"
+                id="score-breakdown"
+                style="display: none"
+              >
+                <div class="score-row">
+                  <span class="score-row-label">Tabla A</span
+                  ><span class="score-row-val" id="br-tablaA">—</span>
+                </div>
+                <div class="score-row">
+                  <span class="score-row-label">+ Carga/Fuerza</span
+                  ><span class="score-row-val" id="br-carga">—</span>
+                </div>
+                <div class="score-row">
+                  <span class="score-row-label">= Puntaje A</span
+                  ><span class="score-row-val" id="br-pA">—</span>
+                </div>
+                <div class="score-row">
+                  <span class="score-row-label">Tabla B</span
+                  ><span class="score-row-val" id="br-tablaB">—</span>
+                </div>
+                <div class="score-row">
+                  <span class="score-row-label">+ Acoplamiento</span
+                  ><span class="score-row-val" id="br-acop">—</span>
+                </div>
+                <div class="score-row">
+                  <span class="score-row-label">= Puntaje B</span
+                  ><span class="score-row-val" id="br-pB">—</span>
+                </div>
+                <div class="score-row">
+                  <span class="score-row-label">Tabla C</span
+                  ><span class="score-row-val" id="br-tablaC">—</span>
+                </div>
+                <div class="score-row">
+                  <span class="score-row-label">+ Actividad</span
+                  ><span class="score-row-val" id="br-act">—</span>
+                </div>
+                <div
+                  class="score-row"
+                  style="border-top: 1px solid var(--clr-primary-light)"
+                >
+                  <span
+                    class="score-row-label"
+                    style="font-weight: 700; color: var(--clr-text-primary)"
+                    >TOTAL REBA</span
+                  ><span
+                    class="score-row-val"
+                    style="color: var(--clr-primary-light)"
+                    id="br-total"
+                    >—</span
+                  >
+                </div>
+              </div>
+            </div>
+
+            <div class="card mt-lg" style="padding: 1rem">
+              <div
+                style="
+                  font-size: 0.8rem;
+                  color: var(--clr-text-muted);
+                  line-height: 1.6;
+                "
+              >
+                <strong style="color: var(--clr-text-secondary)"
+                  >💡 Regla de oro:</strong
+                ><br />
+                La puntuación debe poder reconstruirse. Otra persona debe
+                verificar la fotografía y llegar al mismo resultado.
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script type="module" src="/js/main.js"></script>
+  </body>
 </html>

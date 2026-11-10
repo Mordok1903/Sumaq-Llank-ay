@@ -1,391 +1,168 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mis Evaluaciones — Sumaq Llank'ay</title>
-  <meta name="description" content="Panel de evaluaciones realizadas. Historial y gestión de usuarios.">
-  <link rel="stylesheet" href="../css/styles.css">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../js/config.js"></script>
-  <script src="../js/auth.js"></script>
-  <script src="../js/app.js"></script>
-  <script src="../js/evidencias.js"></script>
-</head>
-<body>
-<div class="app-layout">
-  <div id="sidebar-root"></div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mis Evaluaciones — Sumaq Llank'ay</title>
+    <meta
+      name="description"
+      content="Panel de evaluaciones realizadas. Historial y gestión de usuarios."
+    />
+    <link rel="stylesheet" href="../css/styles.css" />
+    <link rel="stylesheet" href="/css/responsive.css" />
+    <meta name="theme-color" content="#151b2e" />
+  </head>
+  <body data-page="evaluaciones">
+    <div class="app-layout">
+      <div id="sidebar-root"></div>
 
-  <main class="main-content">
-    <div class="topbar">
-      <div class="topbar-breadcrumb">
-        <a href="../index.html">🏠 Inicio</a>
-        <span>/</span>
-        <span class="current">Mis Evaluaciones</span>
-      </div>
-      <div class="topbar-actions">
-        <button class="btn btn-primary btn-sm" onclick="nuevaEvaluacion()">➕ Nueva Evaluación</button>
-      </div>
-    </div>
-
-    <div class="page-header fade-in">
-      <p class="page-tag">📋 Panel de Evaluaciones</p>
-      <h1>Historial de Evaluaciones</h1>
-      <p>Consulta, filtra y accede a todas las evaluaciones realizadas.</p>
-    </div>
-
-    <!-- FILTROS -->
-    <div class="filter-bar fade-in">
-      <input class="form-input" type="text" id="filter-buscar" placeholder="🔍 Buscar empresa, trabajador...">
-      <select class="form-select" id="filter-estado">
-        <option value="">Todos los estados</option>
-        <option value="en_progreso">En progreso</option>
-        <option value="completada">Completada</option>
-      </select>
-      <input class="form-input" type="date" id="filter-desde" title="Desde">
-      <input class="form-input" type="date" id="filter-hasta" title="Hasta">
-    </div>
-
-    <!-- TABLA DE EVALUACIONES -->
-    <div class="card fade-in" id="evaluaciones-card">
-      <div id="evaluaciones-table-container">
-        <div class="eval-empty">
-          <div class="eval-empty-icon">⏳</div>
-          <p>Cargando evaluaciones...</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- PANEL ADMIN: CREAR USUARIO (solo visible para admins) -->
-    <div id="admin-section" style="display:none">
-      <div class="card fade-in mt-xl">
-        <div class="card-header">
-          <div class="card-icon card-icon-primary">👥</div>
-          <div>
-            <div class="card-title">Gestión de Usuarios</div>
-            <div class="card-subtitle">Crear cuentas de evaluadores y administrar accesos</div>
+      <main class="main-content">
+        <div class="topbar">
+          <div class="topbar-breadcrumb">
+            <a href="../index.html">🏠 Inicio</a>
+            <span>/</span>
+            <span class="current">Mis Evaluaciones</span>
+          </div>
+          <div class="topbar-actions">
+            <button class="btn btn-primary btn-sm" data-action="new">
+              ➕ Nueva Evaluación
+            </button>
           </div>
         </div>
 
-        <!-- Formulario crear usuario -->
-        <div class="form-grid form-grid-2">
-          <div class="form-group">
-            <label class="form-label" for="new-user-nombre">Nombre completo <span class="required">*</span></label>
-            <input class="form-input" type="text" id="new-user-nombre" placeholder="Nombre del evaluador">
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="new-user-email">Email <span class="required">*</span></label>
-            <input class="form-input" type="email" id="new-user-email" placeholder="evaluador@empresa.com">
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="new-user-password">Contraseña <span class="required">*</span></label>
-            <input class="form-input" type="password" id="new-user-password" placeholder="Mínimo 6 caracteres">
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="new-user-rol">Rol</label>
-            <select class="form-select" id="new-user-rol">
-              <option value="evaluador">Evaluador</option>
-              <option value="admin">Administrador</option>
-            </select>
-          </div>
-        </div>
-        <div style="margin-top:1rem;">
-          <button class="btn btn-primary" id="btn-crear-usuario" onclick="crearUsuario()">
-            ➕ Crear Usuario
-          </button>
-          <span id="create-user-feedback" style="margin-left:1rem; font-size:0.82rem;"></span>
+        <div class="page-header fade-in">
+          <p class="page-tag">📋 Panel de Evaluaciones</p>
+          <h1>Historial de Evaluaciones</h1>
+          <p>Consulta, filtra y accede a todas las evaluaciones realizadas.</p>
         </div>
 
-        <!-- Lista de usuarios -->
-        <div class="admin-panel">
-          <div style="font-weight:700; font-size:0.9rem; margin-bottom:0.5rem;">Usuarios registrados</div>
-          <div id="admin-user-list" class="admin-user-list">
-            <div class="eval-empty"><p>Cargando usuarios...</p></div>
+        <!-- FILTROS -->
+        <div class="filter-bar fade-in">
+          <input
+            class="form-input"
+            type="text"
+            id="filter-buscar"
+            placeholder="🔍 Buscar empresa, trabajador..."
+          />
+          <select class="form-select" id="filter-estado">
+            <option value="">Todos los estados</option>
+            <option value="en_progreso">En progreso</option>
+            <option value="completada">Completada</option>
+          </select>
+          <input
+            class="form-input"
+            type="date"
+            id="filter-desde"
+            title="Desde"
+          />
+          <input
+            class="form-input"
+            type="date"
+            id="filter-hasta"
+            title="Hasta"
+          />
+        </div>
+
+        <!-- TABLA DE EVALUACIONES -->
+        <div class="card fade-in" id="evaluaciones-card">
+          <div id="evaluaciones-table-container">
+            <div class="eval-empty">
+              <div class="eval-empty-icon">⏳</div>
+              <p>Cargando evaluaciones...</p>
+            </div>
           </div>
         </div>
-      </div>
+
+        <!-- PANEL ADMIN: CREAR USUARIO (solo visible para admins) -->
+        <div id="admin-section" style="display: none">
+          <div class="card fade-in mt-xl">
+            <div class="card-header">
+              <div class="card-icon card-icon-primary">👥</div>
+              <div>
+                <div class="card-title">Gestión de Usuarios</div>
+                <div class="card-subtitle">
+                  Crear cuentas de evaluadores y administrar accesos
+                </div>
+              </div>
+            </div>
+
+            <!-- Formulario crear usuario -->
+            <div class="form-grid form-grid-2">
+              <div class="form-group">
+                <label class="form-label" for="new-user-nombre"
+                  >Nombre completo <span class="required">*</span></label
+                >
+                <input
+                  class="form-input"
+                  type="text"
+                  id="new-user-nombre"
+                  placeholder="Nombre del evaluador"
+                />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="new-user-email"
+                  >Email <span class="required">*</span></label
+                >
+                <input
+                  class="form-input"
+                  type="email"
+                  id="new-user-email"
+                  placeholder="evaluador@empresa.com"
+                />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="new-user-password"
+                  >Contraseña <span class="required">*</span></label
+                >
+                <input
+                  class="form-input"
+                  type="password"
+                  id="new-user-password"
+                  placeholder="Mínimo 12 caracteres"
+                />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="new-user-rol">Rol</label>
+                <select class="form-select" id="new-user-rol">
+                  <option value="evaluador">Evaluador</option>
+                  <option value="admin">Administrador</option>
+                </select>
+              </div>
+            </div>
+            <div style="margin-top: 1rem">
+              <button
+                class="btn btn-primary"
+                id="btn-crear-usuario"
+                data-action="create-user"
+              >
+                ➕ Crear Usuario
+              </button>
+              <span
+                id="create-user-feedback"
+                style="margin-left: 1rem; font-size: 0.82rem"
+              ></span>
+            </div>
+
+            <!-- Lista de usuarios -->
+            <div class="admin-panel">
+              <div
+                style="
+                  font-weight: 700;
+                  font-size: 0.9rem;
+                  margin-bottom: 0.5rem;
+                "
+              >
+                Usuarios registrados
+              </div>
+              <div id="admin-user-list" class="admin-user-list">
+                <div class="eval-empty"><p>Cargando usuarios...</p></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
     </div>
-  </main>
-</div>
 
-<script>
-  // Inicializar
-  (async () => {
-    SIGA.load();
-    AUTH.init();
-    const ok = await AUTH.requireAuth('evaluaciones');
-    if (!ok) return;
-
-    document.getElementById('sidebar-root').innerHTML = renderSidebar('evaluaciones');
-    SIGA.updateProgressBar();
-
-    // Inyectar user badge en sidebar
-    const userBadgeHtml = await AUTH.renderUserBadge();
-    const sidebarFooter = document.querySelector('.sidebar-footer');
-    if (sidebarFooter) sidebarFooter.insertAdjacentHTML('beforebegin', userBadgeHtml);
-
-    // Cargar evaluaciones
-    await cargarEvaluaciones();
-
-    // Mostrar panel admin si corresponde
-    const isAdmin = await AUTH.isAdmin();
-    if (isAdmin) {
-      document.getElementById('admin-section').style.display = 'block';
-      await cargarUsuarios();
-    }
-
-    // Listeners de filtros
-    ['filter-buscar', 'filter-estado', 'filter-desde', 'filter-hasta'].forEach(id => {
-      document.getElementById(id).addEventListener('input', cargarEvaluaciones);
-    });
-  })();
-
-  // ── Cargar evaluaciones ──
-  async function cargarEvaluaciones() {
-    const container = document.getElementById('evaluaciones-table-container');
-    const sb = AUTH.getSupabase();
-
-    let query = sb
-      .from('evaluaciones')
-      .select('*, perfiles!evaluaciones_evaluador_id_fkey(nombre)')
-      .order('created_at', { ascending: false });
-
-    // Aplicar filtros
-    const estado = document.getElementById('filter-estado').value;
-    if (estado) query = query.eq('estado', estado);
-
-    const desde = document.getElementById('filter-desde').value;
-    if (desde) query = query.gte('fecha_eval', desde);
-
-    const hasta = document.getElementById('filter-hasta').value;
-    if (hasta) query = query.lte('fecha_eval', hasta);
-
-    const { data, error } = await query;
-
-    if (error) {
-      container.innerHTML = `<div class="eval-empty"><div class="eval-empty-icon">❌</div><p>Error al cargar: ${error.message}</p></div>`;
-      return;
-    }
-
-    // Filtro de texto local
-    const buscar = document.getElementById('filter-buscar').value.toLowerCase();
-    let evaluaciones = data || [];
-    if (buscar) {
-      evaluaciones = evaluaciones.filter(e =>
-        (e.empresa || '').toLowerCase().includes(buscar) ||
-        (e.trabajador || '').toLowerCase().includes(buscar) ||
-        (e.monitorista || '').toLowerCase().includes(buscar) ||
-        (e.area || '').toLowerCase().includes(buscar)
-      );
-    }
-
-    if (evaluaciones.length === 0) {
-      container.innerHTML = `
-        <div class="eval-empty">
-          <div class="eval-empty-icon">📋</div>
-          <p>No se encontraron evaluaciones</p>
-          <button class="btn btn-primary mt-md" onclick="nuevaEvaluacion()">➕ Crear primera evaluación</button>
-        </div>`;
-      return;
-    }
-
-    let html = `
-      <table class="eval-table">
-        <thead>
-          <tr>
-            <th>Fecha</th>
-            <th>Empresa</th>
-            <th>Trabajador</th>
-            <th>REBA</th>
-            <th>RULA</th>
-            <th>Psico.</th>
-            <th>Estado</th>
-            <th>Evaluador</th>
-          </tr>
-        </thead>
-        <tbody>`;
-
-    evaluaciones.forEach(ev => {
-      const fecha = ev.fecha_eval ? new Date(ev.fecha_eval).toLocaleDateString('es-PE', {day:'2-digit',month:'short',year:'numeric'}) : '—';
-      const evaluador = ev.perfiles?.nombre || '—';
-      html += `
-        <tr onclick="abrirEvaluacion('${ev.id}')">
-          <td>${fecha}</td>
-          <td><strong>${ev.empresa || '—'}</strong></td>
-          <td>${ev.trabajador || '—'}</td>
-          <td>${ev.reba_puntaje_final !== null ? `<span class="risk-badge ${getRebaBadgeClass(ev.reba_nivel)}">${ev.reba_puntaje_final}</span>` : '—'}</td>
-          <td>${ev.rula_puntaje_final !== null ? `<span class="risk-badge ${getRulaBadgeClass(ev.rula_puntaje_final)}">${ev.rula_puntaje_final}</span>` : '—'}</td>
-          <td>${ev.psicosocial_promedio !== null ? ev.psicosocial_promedio + '%' : '—'}</td>
-          <td><span class="eval-table-estado ${ev.estado}">${ev.estado === 'completada' ? '✅ Completada' : '🔄 En progreso'}</span></td>
-          <td style="font-size:0.78rem; color:var(--clr-text-muted)">${evaluador}</td>
-        </tr>`;
-    });
-
-    html += '</tbody></table>';
-    container.innerHTML = html;
-  }
-
-  function getRebaBadgeClass(nivel) {
-    return ['inapreciable','bajo','medio','alto','muy-alto'][nivel] || '';
-  }
-  function getRulaBadgeClass(puntaje) {
-    if (puntaje <= 2) return 'inapreciable';
-    if (puntaje <= 4) return 'bajo';
-    if (puntaje <= 6) return 'medio';
-    return 'muy-alto';
-  }
-
-  // ── Abrir evaluación existente ──
-  async function abrirEvaluacion(evaluacionId) {
-    // Guardar el ID de la evaluación seleccionada
-    localStorage.setItem('siga_evaluacion_id', evaluacionId);
-
-    // Cargar datos de Supabase
-    const sb = AUTH.getSupabase();
-    const { data, error } = await sb
-      .from('evaluaciones')
-      .select('*')
-      .eq('id', evaluacionId)
-      .single();
-
-    if (error || !data) {
-      SIGA.showToast('Error al cargar evaluación', 'error');
-      return;
-    }
-
-    // Reconstruir el estado de SIGA desde los datos de Supabase
-    SIGA.state.identificacion = {
-      empresa: data.empresa, ruc: data.ruc, sede: data.sede, area: data.area,
-      actividad: data.actividad, fechaEval: data.fecha_eval, trabajador: data.trabajador,
-      dni: data.dni, puesto: data.puesto, antiguedad: data.antiguedad, sexo: data.sexo,
-      turno: data.turno, tarea: data.tarea, fase: data.fase,
-      duracionCiclo: data.duracion_ciclo, duracionJornada: data.duracion_jornada,
-      frecuencia: data.frecuencia, descripcionTarea: data.descripcion_tarea,
-      monitorista: data.monitorista, cargoMonitorista: data.cargo_monitorista,
-      observaciones: data.observaciones,
-      ...(data.checklist || {})
-    };
-
-    SIGA.state.reba = data.reba_datos || {};
-    SIGA.state.rula = data.rula_datos || {};
-    SIGA.state.psicosocial = data.psicosocial_datos || {};
-
-    SIGA.state.progreso = {
-      identificacion: !!data.empresa,
-      reba: data.reba_puntaje_final !== null,
-      rula: data.rula_puntaje_final !== null,
-      psicosocial: data.psicosocial_promedio !== null
-    };
-
-    SIGA.save();
-
-    // Redirigir al dashboard si está completada, o al primer módulo pendiente
-    if (data.estado === 'completada') {
-      window.location.href = 'dashboard.html';
-    } else {
-      window.location.href = 'identificacion.html';
-    }
-  }
-
-  // ── Nueva evaluación ──
-  async function nuevaEvaluacion() {
-    const sb = AUTH.getSupabase();
-    const user = await AUTH.getUser();
-
-    const { data, error } = await sb
-      .from('evaluaciones')
-      .insert({ evaluador_id: user.id })
-      .select()
-      .single();
-
-    if (error) {
-      SIGA.showToast('Error al crear evaluación: ' + error.message, 'error');
-      return;
-    }
-
-    // Limpiar estado local
-    localStorage.removeItem('siga_state');
-    localStorage.setItem('siga_evaluacion_id', data.id);
-    SIGA.state = {
-      identificacion: {},
-      reba: {}, rula: {}, psicosocial: {},
-      progreso: { identificacion: false, reba: false, rula: false, psicosocial: false }
-    };
-    SIGA.save();
-
-    window.location.href = 'identificacion.html';
-  }
-
-  // ── Crear usuario (Admin) ──
-  async function crearUsuario() {
-    const nombre = document.getElementById('new-user-nombre').value.trim();
-    const email = document.getElementById('new-user-email').value.trim();
-    const password = document.getElementById('new-user-password').value;
-    const rol = document.getElementById('new-user-rol').value;
-    const feedback = document.getElementById('create-user-feedback');
-    const btn = document.getElementById('btn-crear-usuario');
-
-    if (!nombre || !email || !password) {
-      feedback.textContent = '❌ Complete todos los campos.';
-      feedback.style.color = 'var(--clr-danger)';
-      return;
-    }
-    if (password.length < 6) {
-      feedback.textContent = '❌ La contraseña debe tener al menos 6 caracteres.';
-      feedback.style.color = 'var(--clr-danger)';
-      return;
-    }
-
-    btn.disabled = true;
-    btn.textContent = '⏳ Creando...';
-    feedback.textContent = '';
-
-    const result = await AUTH.createUser(email, password, nombre, rol);
-
-    if (result.success) {
-      feedback.textContent = `✅ Usuario "${nombre}" creado exitosamente como ${rol}.`;
-      feedback.style.color = 'var(--clr-safe)';
-      // Limpiar campos
-      document.getElementById('new-user-nombre').value = '';
-      document.getElementById('new-user-email').value = '';
-      document.getElementById('new-user-password').value = '';
-      document.getElementById('new-user-rol').value = 'evaluador';
-      // Refrescar lista
-      await cargarUsuarios();
-    } else {
-      feedback.textContent = '❌ ' + result.error;
-      feedback.style.color = 'var(--clr-danger)';
-    }
-
-    btn.disabled = false;
-    btn.textContent = '➕ Crear Usuario';
-  }
-
-  // ── Cargar lista de usuarios (Admin) ──
-  async function cargarUsuarios() {
-    const container = document.getElementById('admin-user-list');
-    const users = await AUTH.listUsers();
-
-    if (users.length === 0) {
-      container.innerHTML = '<p style="color:var(--clr-text-muted); font-size:0.82rem;">No se encontraron usuarios.</p>';
-      return;
-    }
-
-    container.innerHTML = users.map(u => {
-      const initial = (u.nombre || u.email).charAt(0).toUpperCase();
-      return `
-        <div class="admin-user-row">
-          <div class="admin-user-avatar">${initial}</div>
-          <div>
-            <div class="admin-user-name">${u.nombre}</div>
-            <div class="admin-user-email">${u.email}</div>
-          </div>
-          <div class="admin-user-role">
-            <span class="user-role-badge ${u.rol === 'admin' ? 'admin' : ''}">${u.rol === 'admin' ? '👑 Admin' : '📋 Evaluador'}</span>
-          </div>
-        </div>`;
-    }).join('');
-  }
-</script>
-</body>
+    <script type="module" src="/js/main.js"></script>
+  </body>
 </html>

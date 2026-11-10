@@ -1,90 +1,41 @@
-# Qhali Kay (Sumaq Llank'ay) - Sistema de Evaluación de Riesgos Laborales 🌿
+# Sumaq Llank'ay · versión 2
 
-![Estado](https://img.shields.io/badge/Estado-Activo-success)
-![Versión](https://img.shields.io/badge/Versi%C3%B3n-1.0-blue)
-![Tecnologías](https://img.shields.io/badge/Tecnolog%C3%ADas-HTML%20%7C%20CSS%20%7C%20JS-F7DF1E)
+Aplicación de evaluación ergonómica con REBA, RULA y un cuestionario psicosocial exploratorio propio. El cuestionario no equivale a FPSICO ni cuenta con validación psicométrica.
 
-**Qhali Kay** (o *Sumaq Llank'ay*) es una aplicación web diseñada para facilitar la evaluación de factores de riesgo ergonómico y psicosocial en el entorno de trabajo. Permite a los evaluadores e inspectores de seguridad y salud en el trabajo registrar de forma digital y estructurada las condiciones de los trabajadores utilizando métodos estandarizados internacionalmente.
+## Utilizar el aplicativo
 
----
+Consulta la [guía de usuario](docs/GUIA_USUARIO.md) para crear una evaluación, completar los métodos, adjuntar evidencias, guardar, cerrar el informe y registrar seguimiento. También está disponible desde **Guía de uso** en el menú y desde la pantalla de acceso, sin necesidad de iniciar sesión.
 
-## 🎯 Métodos de Evaluación Integrados
+El acceso incluye recuperación de contraseña y un diseño adaptable a celulares, tabletas y computadoras. Las cuentas conectadas se solicitan al administrador de la organización. El modo local permite practicar con información ficticia sin credenciales.
 
-El aplicativo consolida los siguientes métodos de evaluación en una interfaz única:
+## Probar en este equipo
 
-### 1. Método RULA (Rapid Upper Limb Assessment)
-Evalúa la exposición de los trabajadores a factores de riesgo que pueden ocasionar trastornos en los miembros superiores (brazos, antebrazos, muñecas), cuello y tronco. Se enfoca en posturas, fuerzas y movimientos repetitivos.
+Requiere Node.js 22.12 o superior. Desde la carpeta del proyecto:
 
-### 2. Método REBA (Rapid Entire Body Assessment)
-Similar a RULA, pero diseñado para evaluar posturas de trabajo impredecibles o dinámicas que afectan a todo el cuerpo (incluyendo miembros inferiores). Especialmente útil en el sector salud, servicios y trabajos de manipulación de cargas.
-
-### 3. Evaluación de Factores Psicosociales
-Módulo destinado a identificar y evaluar riesgos derivados de la organización del trabajo, carga mental, relaciones laborales y otros factores que puedan afectar la salud mental y física del trabajador.
-
----
-
-## 🚀 Funcionalidades Principales
-
-- **Dashboard Integrado:** Panel de control central (index) que permite navegar fácilmente entre las distintas herramientas de evaluación.
-- **Ficha de Identificación:** Registro de datos sociodemográficos y laborales del trabajador previo a las evaluaciones específicas.
-- **Diseño Responsivo:** Interfaz adaptable para su uso en computadoras de escritorio, tablets y dispositivos móviles, ideal para inspecciones en campo.
-- **Persistencia Local:** Manejo de estado a través de JavaScript, permitiendo un flujo continuo durante la recolección de datos.
-
----
-
-## 📂 Estructura del Proyecto
-
-El proyecto está construido puramente con tecnologías Frontend estándar (Vanilla HTML, CSS, JS):
-
-```text
-📦 Sumaq-Llank-ay
- ┣ 📂 css
- ┃ ┗ 📜 styles.css           # Hoja de estilos global y diseño del sistema
- ┣ 📂 js
- ┃ ┣ 📜 app.js               # Lógica general y navegación
- ┃ ┣ 📜 psicosocial.js       # Lógica de cálculo y validación: Ficha Psicosocial
- ┃ ┣ 📜 reba.js              # Lógica de cálculo y validación: Método REBA
- ┃ ┗ 📜 rula.js              # Lógica de cálculo y validación: Método RULA
- ┣ 📂 pages
- ┃ ┣ 📜 dashboard.html       # Panel principal del aplicativo
- ┃ ┣ 📜 identificacion.html  # Formulario de datos del trabajador
- ┃ ┣ 📜 psicosocial.html     # Interfaz de la evaluación psicosocial
- ┃ ┣ 📜 reba.html            # Interfaz de evaluación REBA
- ┃ ┗ 📜 rula.html            # Interfaz de evaluación RULA
- ┣ 📜 index.html             # Punto de entrada / Landing page
- ┗ 📜 README.md              # Documentación del proyecto
+```powershell
+npm ci
+npm start
 ```
 
----
+Abrir http://127.0.0.1:5173. El modo predeterminado usa datos ficticios y archivos guardados en IndexedDB de este navegador; no contacta con Supabase ni Cloudinary. No abrir los HTML con doble clic. El puerto y el navegador determinan qué datos de prueba aparecen.
 
-## 💻 Instalación y Uso Local
+Seguir [la prueba local](docs/PRUEBA_LOCAL.md). Para comprobar el código: `npm run check`. Para verificar la función de servidor: `npm exec deno -- check supabase/functions/siga-api/index.ts`.
 
-Al ser un proyecto estático, no requiere de instalación de dependencias ni servidores complejos para funcionar.
+La interfaz se adapta a celular, tableta, laptop y PC. Ver [la revisión del frontend y la prueba desde un dispositivo físico](docs/FRONTEND_ADAPTABLE.md).
 
-1. **Clonar el repositorio:**
-   ```bash
-   git clone https://github.com/Mordok1903/Sumaq-Llank-ay.git
-   ```
+## Qué cambió
 
-2. **Abrir el proyecto:**
-   - Navega a la carpeta descargada.
-   - Haz doble clic en el archivo `index.html` para abrirlo en tu navegador predeterminado.
-   - *(Opcional, pero recomendado)*: Abre el proyecto usando un servidor local estático como la extensión "Live Server" en VSCode para una mejor experiencia de desarrollo.
+- Cálculos compartidos y versionados entre navegador y servidor; correcciones de tablas y rangos REBA/RULA.
+- Guardado de los controles actuales, borradores por usuario y evaluación, cola de guardado y detección de conflictos.
+- Informes cerrados con datos, evidencias, versiones, revisión y SHA-256; seguimiento separado del informe.
+- Cargas autenticadas, validación de contenido y tamaño, eliminación con reintentos y trazabilidad.
+- Permisos de lectura por propietario/administrador y escrituras exclusivamente a través del servidor autenticado.
+- Dependencias fijadas, compilación, pruebas de dominio, persistencia, permisos y cifrado de respaldos.
 
----
+Ver [arquitectura](docs/ARQUITECTURA.md), [cambios y límites](docs/CORRECCIONES.md) y [publicación y configuración](docs/DESPLIEGUE.md).
 
-## 🌍 Despliegue (Hosting)
+## Estado de los servicios
 
-Este proyecto está optimizado para ser desplegado fácilmente en plataformas gratuitas como **Vercel**, **GitHub Pages** o **Netlify**.
+La publicación del código no despliega los servicios. Las migraciones y los cambios de configuración de las cuentas reales no se han aplicado en esta entrega. Sigue [los scripts de Supabase en orden](docs/SUPABASE_PASO_A_PASO.md) y el procedimiento de cambio coordinado antes de utilizar V2 en producción. Los informes internos sobre las cuentas reales permanecen fuera del repositorio público.
 
-Para desplegar en Vercel:
-1. Inicia sesión en [Vercel](https://vercel.com/).
-2. Haz clic en "Add New" -> "Project".
-3. Importa este repositorio de GitHub.
-4. Haz clic en "Deploy" sin modificar la configuración predeterminada.
-
----
-
-## 👥 Contribuciones
-
-Si deseas colaborar con el proyecto, por favor crea un *fork* del repositorio, crea una nueva rama para tus características (`git checkout -b feature/nueva-caracteristica`) y envía un *Pull Request* para su revisión.
+La prueba local de interfaz no certifica una integración real con Supabase/Cloudinary. Esa comprobación debe realizarse en un proyecto de desarrollo antes del cambio coordinado de producción.

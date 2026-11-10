@@ -10,3 +10,16 @@
 # Sistema operativo
 .DS_Store
 Thumbs.db
+
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+backups/
+test-results/
+.supabase/
+
+# Informes internos con observaciones de las cuentas reales; conservar solo localmente.
+AUDITORIA_CODIGO.md
+VERIFICACION_SERVICIOS.md
