@@ -39,11 +39,21 @@ BEGIN
   END IF;
 END $$;
 
--- pg_net conserva temporalmente la cabecera de autorizacion en su cola.
--- Evitar que roles del navegador puedan leerla o realizar peticiones arbitrarias.
-REVOKE ALL ON SCHEMA net,cron FROM PUBLIC,anon,authenticated;
-REVOKE ALL ON ALL TABLES IN SCHEMA net,cron FROM PUBLIC,anon,authenticated;
-REVOKE ALL ON ALL FUNCTIONS IN SCHEMA net,cron FROM PUBLIC,anon,authenticated;
+-- Supabase administra los objetos de pg_net como supabase_admin: un REVOKE
+-- ejecutado como postgres no elimina sus permisos PUBLIC. No afirmamos que lo haga.
+-- La cola conserva temporalmente la cabecera: usar SOLO el secreto limitado de
+-- mantenimiento y mantener net fuera de los esquemas expuestos por la Data API.
+-- Los roles del navegador deben seguir siendo NOLOGIN; verificar tambien por HTTP.
+-- https://supabase.com/kb/troubleshooting/revoking-access-to-pg_net-objects-has-no-effect-0bbc16
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname IN ('anon','authenticated') AND rolcanlogin) THEN
+    RAISE EXCEPTION 'Los roles del navegador no deben permitir conexiones SQL directas';
+  END IF;
+END $$;
+REVOKE ALL ON SCHEMA cron FROM PUBLIC,anon,authenticated;
+REVOKE ALL ON ALL TABLES IN SCHEMA cron FROM PUBLIC,anon,authenticated;
+REVOKE ALL ON ALL FUNCTIONS IN SCHEMA cron FROM PUBLIC,anon,authenticated;
 
 CREATE OR REPLACE FUNCTION public.siga_run_maintenance()
 RETURNS bigint LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $$
@@ -68,3 +78,5 @@ SELECT cron.schedule('siga-maintenance-v2','*/5 * * * *','SELECT public.siga_run
 COMMIT;
 
 -- Verificar luego el job y una respuesta HTTP real; agendar no prueba la entrega.
+-- Con la clave publica, Accept-Profile: net debe devolver PGRST106 (no expuesto).
+-- La llamada anonima a RPC siga_run_maintenance debe ser rechazada.
