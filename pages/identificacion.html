@@ -1,355 +1,431 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Identificación del Trabajador — Sumaq Llank'ay</title>
-  <meta name="description" content="Datos de identificación del trabajador, empresa y tarea para la evaluación de riesgos laborales SIGA.">
-  <link rel="stylesheet" href="../css/styles.css">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../js/config.js"></script>
-  <script src="../js/auth.js"></script>
-  <script src="../js/app.js"></script>
-  <script src="../js/evidencias.js"></script>
-</head>
-<body>
-<div class="app-layout">
-  <div id="sidebar-root"></div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Identificación del Trabajador — Sumaq Llank'ay</title>
+    <meta
+      name="description"
+      content="Datos de identificación del trabajador, empresa y tarea para la evaluación de riesgos laborales SIGA."
+    />
+    <link rel="stylesheet" href="../css/styles.css" />
+    <link rel="stylesheet" href="/css/responsive.css" />
+    <meta name="theme-color" content="#151b2e" />
+  </head>
+  <body data-page="identificacion">
+    <div class="app-layout">
+      <div id="sidebar-root"></div>
 
-  <main class="main-content">
-    <div class="topbar">
-      <div class="topbar-breadcrumb">
-        <a href="../index.html">🏠 Inicio</a>
-        <span>/</span>
-        <span class="current">Módulo 1 — Identificación</span>
-      </div>
-      <div class="topbar-actions">
-        <button class="btn btn-secondary btn-sm" onclick="SIGA.save(); SIGA.showToast('Guardado ✓')">💾 Guardar</button>
-      </div>
+      <main class="main-content">
+        <div class="topbar">
+          <div class="topbar-breadcrumb">
+            <a href="../index.html">🏠 Inicio</a>
+            <span>/</span>
+            <span class="current">Módulo 1 — Identificación</span>
+          </div>
+          <div class="topbar-actions">
+            <button class="btn btn-secondary btn-sm" data-action="save">
+              💾 Guardar
+            </button>
+          </div>
+        </div>
+
+        <div class="page-header fade-in">
+          <p class="page-tag">👤 Módulo 1 de 4</p>
+          <h1>Identificación del Trabajador y la Tarea</h1>
+          <p>
+            Complete los datos de cabecera. Esta información se incluirá en el
+            informe final de evaluación.
+          </p>
+        </div>
+
+        <!-- Stepper -->
+        <div class="stepper fade-in">
+          <div class="step active">
+            <div class="step-circle">1</div>
+            <span class="step-label">Identificación</span>
+          </div>
+          <div class="step-line"></div>
+          <div class="step"><div class="step-circle">2</div></div>
+          <div class="step-line"></div>
+          <div class="step"><div class="step-circle">3</div></div>
+          <div class="step-line"></div>
+          <div class="step"><div class="step-circle">4</div></div>
+        </div>
+
+        <form id="form-identificacion" novalidate>
+          <!-- DATOS DE LA EMPRESA -->
+          <div class="card fade-in">
+            <div class="card-header">
+              <div class="card-icon card-icon-primary">🏢</div>
+              <div>
+                <div class="card-title">Datos de la Empresa</div>
+                <div class="card-subtitle">
+                  Información de la organización evaluada
+                </div>
+              </div>
+            </div>
+            <div class="form-grid form-grid-2">
+              <div class="form-group">
+                <label class="form-label" for="empresa"
+                  >Empresa / Razón Social <span class="required">*</span></label
+                >
+                <input
+                  class="form-input"
+                  type="text"
+                  id="empresa"
+                  placeholder="Ej: Planta Industrial SAC"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="ruc">RUC</label>
+                <input
+                  class="form-input"
+                  type="text"
+                  id="ruc"
+                  placeholder="20XXXXXXXXX"
+                  maxlength="11"
+                />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="sede">Sede / Planta</label>
+                <input
+                  class="form-input"
+                  type="text"
+                  id="sede"
+                  placeholder="Ej: Sede Lima Norte"
+                />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="area"
+                  >Área / Departamento <span class="required">*</span></label
+                >
+                <input
+                  class="form-input"
+                  type="text"
+                  id="area"
+                  placeholder="Ej: Producción, Almacén, Oficinas..."
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="actividad"
+                  >Actividad Económica</label
+                >
+                <input
+                  class="form-input"
+                  type="text"
+                  id="actividad"
+                  placeholder="Ej: Manufactura, Construcción, Salud..."
+                />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="fechaEval"
+                  >Fecha de Evaluación <span class="required">*</span></label
+                >
+                <input class="form-input" type="date" id="fechaEval" required />
+              </div>
+            </div>
+          </div>
+
+          <!-- DATOS DEL TRABAJADOR -->
+          <div class="card fade-in mt-lg">
+            <div class="card-header">
+              <div class="card-icon card-icon-cyan">👤</div>
+              <div>
+                <div class="card-title">Datos del Trabajador</div>
+                <div class="card-subtitle">
+                  Información del trabajador observado
+                </div>
+              </div>
+            </div>
+            <div class="form-grid form-grid-2">
+              <div class="form-group">
+                <label class="form-label" for="trabajador"
+                  >Nombre completo del Trabajador
+                  <span class="required">*</span></label
+                >
+                <input
+                  class="form-input"
+                  type="text"
+                  id="trabajador"
+                  placeholder="Apellidos y nombres"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="dni">DNI</label>
+                <input
+                  class="form-input"
+                  type="text"
+                  id="dni"
+                  placeholder="00000000"
+                  maxlength="8"
+                />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="puesto"
+                  >Puesto de Trabajo <span class="required">*</span></label
+                >
+                <input
+                  class="form-input"
+                  type="text"
+                  id="puesto"
+                  placeholder="Ej: Operador de Máquina, Técnico de Mantenimiento..."
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="antiguedad"
+                  >Antigüedad en el Puesto</label
+                >
+                <input
+                  class="form-input"
+                  type="text"
+                  id="antiguedad"
+                  placeholder="Ej: 2 años 3 meses"
+                />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="sexo">Sexo</label>
+                <select class="form-select" id="sexo">
+                  <option value="">— Seleccionar —</option>
+                  <option value="M">Masculino</option>
+                  <option value="F">Femenino</option>
+                  <option value="NR">Prefiere no responder</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="turno">Turno de Trabajo</label>
+                <select class="form-select" id="turno">
+                  <option value="">— Seleccionar —</option>
+                  <option value="mañana">Mañana (06:00–14:00)</option>
+                  <option value="tarde">Tarde (14:00–22:00)</option>
+                  <option value="noche">Noche (22:00–06:00)</option>
+                  <option value="diurno">Diurno (08:00–17:00)</option>
+                  <option value="otro">Otro</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- DESCRIPCIÓN DE LA TAREA -->
+          <div class="card fade-in mt-lg">
+            <div class="card-header">
+              <div class="card-icon card-icon-warn">⚙️</div>
+              <div>
+                <div class="card-title">Descripción de la Tarea Evaluada</div>
+                <div class="card-subtitle">
+                  Detalle la actividad y condiciones de trabajo observadas
+                </div>
+              </div>
+            </div>
+            <div class="form-grid form-grid-2">
+              <div class="form-group" style="grid-column: 1/-1">
+                <label class="form-label" for="tarea"
+                  >Tarea / Actividad Principal
+                  <span class="required">*</span></label
+                >
+                <input
+                  class="form-input"
+                  type="text"
+                  id="tarea"
+                  placeholder="Ej: Levantamiento y traslado de cajas desde estante bajo"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="fase">Fase Evaluada</label>
+                <input
+                  class="form-input"
+                  type="text"
+                  id="fase"
+                  placeholder="Ej: Levantamiento desde el suelo"
+                />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="duracionCiclo"
+                  >Duración del Ciclo de Trabajo</label
+                >
+                <input
+                  class="form-input"
+                  type="text"
+                  id="duracionCiclo"
+                  placeholder="Ej: 45 segundos, 3 minutos"
+                />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="duracionJornada"
+                  >Duración de la Jornada</label
+                >
+                <input
+                  class="form-input"
+                  type="text"
+                  id="duracionJornada"
+                  placeholder="Ej: 8 horas"
+                />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="frecuencia"
+                  >Frecuencia de la Tarea</label
+                >
+                <input
+                  class="form-input"
+                  type="text"
+                  id="frecuencia"
+                  placeholder="Ej: 6 veces por minuto, 40 veces por turno"
+                />
+              </div>
+              <div class="form-group" style="grid-column: 1/-1">
+                <label class="form-label" for="descripcionTarea"
+                  >Descripción detallada (condiciones, herramientas, cargas,
+                  posturas observadas)</label
+                >
+                <textarea
+                  class="form-textarea"
+                  id="descripcionTarea"
+                  rows="3"
+                  placeholder="Describa el ciclo de trabajo, herramientas utilizadas, condiciones del entorno, posturas habituales y cualquier variación relevante..."
+                ></textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- MONITORISTA -->
+          <div class="card fade-in mt-lg">
+            <div class="card-header">
+              <div class="card-icon card-icon-safe">🔍</div>
+              <div>
+                <div class="card-title">Datos del Monitorista</div>
+                <div class="card-subtitle">
+                  Profesional responsable de la evaluación
+                </div>
+              </div>
+            </div>
+            <div class="form-grid form-grid-2">
+              <div class="form-group">
+                <label class="form-label" for="monitorista"
+                  >Nombre del Monitorista <span class="required">*</span></label
+                >
+                <input
+                  class="form-input"
+                  type="text"
+                  id="monitorista"
+                  placeholder="Nombre completo"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="cargoMonitorista"
+                  >Cargo / Especialización</label
+                >
+                <input
+                  class="form-input"
+                  type="text"
+                  id="cargoMonitorista"
+                  placeholder="Ej: Ing. de Seguridad Industrial, Esp. SST"
+                />
+              </div>
+              <div class="form-group" style="grid-column: 1/-1">
+                <label class="form-label" for="observaciones"
+                  >Observaciones adicionales</label
+                >
+                <textarea
+                  class="form-textarea"
+                  id="observaciones"
+                  rows="2"
+                  placeholder="Limitaciones de la observación, condiciones especiales del día de evaluación, incertidumbres..."
+                ></textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- CHECKLIST DE PREPARACIÓN -->
+          <div class="card fade-in mt-lg">
+            <div class="card-header">
+              <div class="card-icon card-icon-primary">✅</div>
+              <div>
+                <div class="card-title">Checklist de Preparación</div>
+                <div class="card-subtitle">
+                  Confirme que se han seguido los protocolos de observación
+                </div>
+              </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 0.625rem">
+              <label class="score-option" id="chk-habitual">
+                <input type="checkbox" id="c1" /> El trabajador realizó la tarea
+                de manera habitual durante la observación
+                <span
+                  style="
+                    margin-left: auto;
+                    font-size: 0.75rem;
+                    color: var(--clr-text-muted);
+                  "
+                  >Preparación</span
+                >
+              </label>
+              <label class="score-option" id="chk-evidencia">
+                <input type="checkbox" id="c2" /> Se registró evidencia
+                fotográfica o videográfica del ciclo de trabajo
+                <span
+                  style="
+                    margin-left: auto;
+                    font-size: 0.75rem;
+                    color: var(--clr-text-muted);
+                  "
+                  >Evidencia</span
+                >
+              </label>
+              <!-- ZONA DE UPLOAD DE EVIDENCIAS -->
+              <div
+                id="evidencias-upload-container"
+                style="margin-top: 0.5rem"
+              ></div>
+              <label class="score-option" id="chk-informado">
+                <input type="checkbox" id="c3" /> Se informó al trabajador sobre
+                el propósito de la evaluación
+                <span
+                  style="
+                    margin-left: auto;
+                    font-size: 0.75rem;
+                    color: var(--clr-text-muted);
+                  "
+                  >Ética</span
+                >
+              </label>
+              <label class="score-option" id="chk-representativa">
+                <input type="checkbox" id="c4" /> Se seleccionó la postura
+                representativa o más exigente del ciclo
+                <span
+                  style="
+                    margin-left: auto;
+                    font-size: 0.75rem;
+                    color: var(--clr-text-muted);
+                  "
+                  >Metodología</span
+                >
+              </label>
+            </div>
+          </div>
+
+          <!-- NAVEGACIÓN -->
+          <div class="form-navigation">
+            <a href="../index.html" class="btn btn-secondary"
+              >← Volver al Inicio</a
+            >
+            <button
+              type="button"
+              class="btn btn-primary btn-lg"
+              data-action="continue"
+            >
+              Continuar a REBA →
+            </button>
+          </div>
+        </form>
+      </main>
     </div>
 
-    <div class="page-header fade-in">
-      <p class="page-tag">👤 Módulo 1 de 4</p>
-      <h1>Identificación del Trabajador y la Tarea</h1>
-      <p>Complete los datos de cabecera. Esta información se incluirá en el informe final de evaluación.</p>
-    </div>
-
-    <!-- Stepper -->
-    <div class="stepper fade-in">
-      <div class="step active"><div class="step-circle">1</div><span class="step-label">Identificación</span></div>
-      <div class="step-line"></div>
-      <div class="step"><div class="step-circle">2</div></div>
-      <div class="step-line"></div>
-      <div class="step"><div class="step-circle">3</div></div>
-      <div class="step-line"></div>
-      <div class="step"><div class="step-circle">4</div></div>
-    </div>
-
-    <form id="form-identificacion" novalidate>
-
-      <!-- DATOS DE LA EMPRESA -->
-      <div class="card fade-in">
-        <div class="card-header">
-          <div class="card-icon card-icon-primary">🏢</div>
-          <div>
-            <div class="card-title">Datos de la Empresa</div>
-            <div class="card-subtitle">Información de la organización evaluada</div>
-          </div>
-        </div>
-        <div class="form-grid form-grid-2">
-          <div class="form-group">
-            <label class="form-label" for="empresa">Empresa / Razón Social <span class="required">*</span></label>
-            <input class="form-input" type="text" id="empresa" placeholder="Ej: Planta Industrial SAC" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="ruc">RUC</label>
-            <input class="form-input" type="text" id="ruc" placeholder="20XXXXXXXXX" maxlength="11">
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="sede">Sede / Planta</label>
-            <input class="form-input" type="text" id="sede" placeholder="Ej: Sede Lima Norte">
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="area">Área / Departamento <span class="required">*</span></label>
-            <input class="form-input" type="text" id="area" placeholder="Ej: Producción, Almacén, Oficinas..." required>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="actividad">Actividad Económica</label>
-            <input class="form-input" type="text" id="actividad" placeholder="Ej: Manufactura, Construcción, Salud...">
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="fechaEval">Fecha de Evaluación <span class="required">*</span></label>
-            <input class="form-input" type="date" id="fechaEval" required>
-          </div>
-        </div>
-      </div>
-
-      <!-- DATOS DEL TRABAJADOR -->
-      <div class="card fade-in mt-lg">
-        <div class="card-header">
-          <div class="card-icon card-icon-cyan">👤</div>
-          <div>
-            <div class="card-title">Datos del Trabajador</div>
-            <div class="card-subtitle">Información del trabajador observado</div>
-          </div>
-        </div>
-        <div class="form-grid form-grid-2">
-          <div class="form-group">
-            <label class="form-label" for="trabajador">Nombre completo del Trabajador <span class="required">*</span></label>
-            <input class="form-input" type="text" id="trabajador" placeholder="Apellidos y nombres" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="dni">DNI</label>
-            <input class="form-input" type="text" id="dni" placeholder="00000000" maxlength="8">
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="puesto">Puesto de Trabajo <span class="required">*</span></label>
-            <input class="form-input" type="text" id="puesto" placeholder="Ej: Operador de Máquina, Técnico de Mantenimiento..." required>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="antiguedad">Antigüedad en el Puesto</label>
-            <input class="form-input" type="text" id="antiguedad" placeholder="Ej: 2 años 3 meses">
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="sexo">Sexo</label>
-            <select class="form-select" id="sexo">
-              <option value="">— Seleccionar —</option>
-              <option value="M">Masculino</option>
-              <option value="F">Femenino</option>
-              <option value="NR">Prefiere no responder</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="turno">Turno de Trabajo</label>
-            <select class="form-select" id="turno">
-              <option value="">— Seleccionar —</option>
-              <option value="mañana">Mañana (06:00–14:00)</option>
-              <option value="tarde">Tarde (14:00–22:00)</option>
-              <option value="noche">Noche (22:00–06:00)</option>
-              <option value="diurno">Diurno (08:00–17:00)</option>
-              <option value="otro">Otro</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      <!-- DESCRIPCIÓN DE LA TAREA -->
-      <div class="card fade-in mt-lg">
-        <div class="card-header">
-          <div class="card-icon card-icon-warn">⚙️</div>
-          <div>
-            <div class="card-title">Descripción de la Tarea Evaluada</div>
-            <div class="card-subtitle">Detalle la actividad y condiciones de trabajo observadas</div>
-          </div>
-        </div>
-        <div class="form-grid form-grid-2">
-          <div class="form-group" style="grid-column: 1/-1;">
-            <label class="form-label" for="tarea">Tarea / Actividad Principal <span class="required">*</span></label>
-            <input class="form-input" type="text" id="tarea" placeholder="Ej: Levantamiento y traslado de cajas desde estante bajo" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="fase">Fase Evaluada</label>
-            <input class="form-input" type="text" id="fase" placeholder="Ej: Levantamiento desde el suelo">
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="duracionCiclo">Duración del Ciclo de Trabajo</label>
-            <input class="form-input" type="text" id="duracionCiclo" placeholder="Ej: 45 segundos, 3 minutos">
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="duracionJornada">Duración de la Jornada</label>
-            <input class="form-input" type="text" id="duracionJornada" placeholder="Ej: 8 horas">
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="frecuencia">Frecuencia de la Tarea</label>
-            <input class="form-input" type="text" id="frecuencia" placeholder="Ej: 6 veces por minuto, 40 veces por turno">
-          </div>
-          <div class="form-group" style="grid-column: 1/-1;">
-            <label class="form-label" for="descripcionTarea">Descripción detallada (condiciones, herramientas, cargas, posturas observadas)</label>
-            <textarea class="form-textarea" id="descripcionTarea" rows="3" placeholder="Describa el ciclo de trabajo, herramientas utilizadas, condiciones del entorno, posturas habituales y cualquier variación relevante..."></textarea>
-          </div>
-        </div>
-      </div>
-
-      <!-- MONITORISTA -->
-      <div class="card fade-in mt-lg">
-        <div class="card-header">
-          <div class="card-icon card-icon-safe">🔍</div>
-          <div>
-            <div class="card-title">Datos del Monitorista</div>
-            <div class="card-subtitle">Profesional responsable de la evaluación</div>
-          </div>
-        </div>
-        <div class="form-grid form-grid-2">
-          <div class="form-group">
-            <label class="form-label" for="monitorista">Nombre del Monitorista <span class="required">*</span></label>
-            <input class="form-input" type="text" id="monitorista" placeholder="Nombre completo" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="cargoMonitorista">Cargo / Especialización</label>
-            <input class="form-input" type="text" id="cargoMonitorista" placeholder="Ej: Ing. de Seguridad Industrial, Esp. SST">
-          </div>
-          <div class="form-group" style="grid-column: 1/-1;">
-            <label class="form-label" for="observaciones">Observaciones adicionales</label>
-            <textarea class="form-textarea" id="observaciones" rows="2" placeholder="Limitaciones de la observación, condiciones especiales del día de evaluación, incertidumbres..."></textarea>
-          </div>
-        </div>
-      </div>
-
-      <!-- CHECKLIST DE PREPARACIÓN -->
-      <div class="card fade-in mt-lg">
-        <div class="card-header">
-          <div class="card-icon card-icon-primary">✅</div>
-          <div>
-            <div class="card-title">Checklist de Preparación</div>
-            <div class="card-subtitle">Confirme que se han seguido los protocolos de observación</div>
-          </div>
-        </div>
-        <div style="display: flex; flex-direction: column; gap: 0.625rem;">
-          <label class="score-option" id="chk-habitual">
-            <input type="checkbox" id="c1"> El trabajador realizó la tarea de manera habitual durante la observación
-            <span style="margin-left:auto; font-size:0.75rem; color:var(--clr-text-muted);">Preparación</span>
-          </label>
-          <label class="score-option" id="chk-evidencia">
-            <input type="checkbox" id="c2"> Se registró evidencia fotográfica o videográfica del ciclo de trabajo
-            <span style="margin-left:auto; font-size:0.75rem; color:var(--clr-text-muted);">Evidencia</span>
-          </label>
-          <!-- ZONA DE UPLOAD DE EVIDENCIAS -->
-          <div id="evidencias-upload-container" style="margin-top:0.5rem;"></div>
-          <label class="score-option" id="chk-informado">
-            <input type="checkbox" id="c3"> Se informó al trabajador sobre el propósito de la evaluación
-            <span style="margin-left:auto; font-size:0.75rem; color:var(--clr-text-muted);">Ética</span>
-          </label>
-          <label class="score-option" id="chk-representativa">
-            <input type="checkbox" id="c4"> Se seleccionó la postura representativa o más exigente del ciclo
-            <span style="margin-left:auto; font-size:0.75rem; color:var(--clr-text-muted);">Metodología</span>
-          </label>
-        </div>
-      </div>
-
-      <!-- NAVEGACIÓN -->
-      <div class="form-navigation">
-        <a href="../index.html" class="btn btn-secondary">← Volver al Inicio</a>
-        <button type="button" class="btn btn-primary btn-lg" onclick="guardarYContinuar()">
-          Continuar a REBA →
-        </button>
-      </div>
-    </form>
-  </main>
-</div>
-
-<script>
-  // Inicializar con auth
-  (async () => {
-    SIGA.init('identificacion');
-    document.getElementById('sidebar-root').innerHTML = renderSidebar('identificacion');
-
-    // Asegurar que existe una evaluación activa
-    const evaluacionId = await SIGA.ensureEvaluacion();
-
-    // Establecer fecha de hoy por defecto
-    const hoy = new Date().toISOString().split('T')[0];
-    document.getElementById('fechaEval').value = hoy;
-
-    // Cargar datos guardados
-    const saved = SIGA.state.identificacion;
-    if (saved) {
-      const fields = ['empresa','ruc','sede','area','actividad','fechaEval','trabajador','dni',
-                      'puesto','antiguedad','sexo','turno','tarea','fase','duracionCiclo',
-                      'duracionJornada','frecuencia','descripcionTarea','monitorista',
-                      'cargoMonitorista','observaciones'];
-      fields.forEach(id => {
-        const el = document.getElementById(id);
-        if (el && saved[id] !== undefined) el.value = saved[id];
-      });
-      if (saved.c1) document.getElementById('c1').checked = true;
-      if (saved.c2) document.getElementById('c2').checked = true;
-      if (saved.c3) document.getElementById('c3').checked = true;
-      if (saved.c4) document.getElementById('c4').checked = true;
-    }
-
-    // Resaltar checkboxes marcados
-    ['c1','c2','c3','c4'].forEach(id => {
-      const el = document.getElementById(id);
-      const parent = el.closest('.score-option');
-      el.addEventListener('change', () => {
-        parent.classList.toggle('selected', el.checked);
-      });
-      if (el.checked) parent.classList.add('selected');
-    });
-
-    // Renderizar zona de upload de evidencias
-    if (evaluacionId) {
-      EVIDENCIAS.renderUploadZone(evaluacionId, 'evidencias-upload-container');
-    }
-  })();
-
-  function recogerDatos() {
-    return {
-      empresa: document.getElementById('empresa').value,
-      ruc: document.getElementById('ruc').value,
-      sede: document.getElementById('sede').value,
-      area: document.getElementById('area').value,
-      actividad: document.getElementById('actividad').value,
-      fechaEval: document.getElementById('fechaEval').value,
-      trabajador: document.getElementById('trabajador').value,
-      dni: document.getElementById('dni').value,
-      puesto: document.getElementById('puesto').value,
-      antiguedad: document.getElementById('antiguedad').value,
-      sexo: document.getElementById('sexo').value,
-      turno: document.getElementById('turno').value,
-      tarea: document.getElementById('tarea').value,
-      fase: document.getElementById('fase').value,
-      duracionCiclo: document.getElementById('duracionCiclo').value,
-      duracionJornada: document.getElementById('duracionJornada').value,
-      frecuencia: document.getElementById('frecuencia').value,
-      descripcionTarea: document.getElementById('descripcionTarea').value,
-      monitorista: document.getElementById('monitorista').value,
-      cargoMonitorista: document.getElementById('cargoMonitorista').value,
-      observaciones: document.getElementById('observaciones').value,
-      c1: document.getElementById('c1').checked,
-      c2: document.getElementById('c2').checked,
-      c3: document.getElementById('c3').checked,
-      c4: document.getElementById('c4').checked
-    };
-  }
-
-  async function guardarYContinuar() {
-    const datos = recogerDatos();
-    const required = ['empresa','area','fechaEval','trabajador','puesto','tarea','monitorista'];
-    const missing = required.filter(f => !datos[f]);
-    if (missing.length > 0) {
-      SIGA.showToast('Complete los campos obligatorios (*)', 'error');
-      document.getElementById(missing[0]).focus();
-      return;
-    }
-
-    // Validar mínimos de evidencias
-    const evaluacionId = localStorage.getItem('siga_evaluacion_id');
-    if (evaluacionId) {
-      const validacion = await EVIDENCIAS.validarMinimos(evaluacionId);
-      if (!validacion.valido) {
-        SIGA.showToast(validacion.errores[0], 'error');
-        return;
-      }
-      // Auto-marcar el checkbox de evidencia
-      document.getElementById('c2').checked = true;
-      datos.c2 = true;
-    }
-
-    SIGA.state.identificacion = datos;
-    SIGA.state.progreso.identificacion = true;
-    SIGA.save();
-    SIGA.showToast('Módulo 1 guardado ✓');
-    setTimeout(() => window.location.href = 'reba.html', 600);
-  }
-
-  // Autoguardado al cambiar campos
-  document.querySelectorAll('.form-input, .form-select, .form-textarea').forEach(el => {
-    el.addEventListener('blur', () => {
-      SIGA.state.identificacion = recogerDatos();
-      SIGA.save();
-    });
-  });
-</script>
-</body>
+    <script type="module" src="/js/main.js"></script>
+  </body>
 </html>

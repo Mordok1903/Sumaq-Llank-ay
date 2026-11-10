@@ -1,496 +1,357 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Resultados — Sumaq Llank'ay</title>
-  <meta name="description" content="Dashboard de resultados de la evaluación de riesgos ergonómicos y psicosociales SIGA.">
-  <link rel="stylesheet" href="../css/styles.css">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="../js/config.js"></script>
-  <script src="../js/auth.js"></script>
-  <script src="../js/app.js"></script>
-  <script src="../js/reba.js"></script>
-  <script src="../js/rula.js"></script>
-  <script src="../js/psicosocial.js"></script>
-  <script src="../js/evidencias.js"></script>
-  <style>
-    .results-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
-    .chart-container { position: relative; height: 280px; }
-    .semaforo-row { display: flex; align-items: center; gap: 1rem; padding: 0.875rem 0; border-bottom: 1px solid var(--clr-border); }
-    .semaforo-row:last-child { border-bottom: none; }
-    .semaforo-dot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
-    .semaforo-dot.safe { background: var(--clr-safe); box-shadow: 0 0 6px var(--clr-safe); }
-    .semaforo-dot.warn { background: var(--clr-warn); box-shadow: 0 0 6px var(--clr-warn); }
-    .semaforo-dot.danger { background: var(--clr-danger); box-shadow: 0 0 6px var(--clr-danger); }
-    .semaforo-dot.critical { background: var(--clr-critical); box-shadow: 0 0 8px var(--clr-critical); animation: pulse-danger 1.5s infinite; }
-    .semaforo-label { flex: 1; font-size: 0.875rem; font-weight: 600; }
-    .semaforo-val { font-size: 1.1rem; font-weight: 800; }
-    .recomendacion-card { background: var(--clr-bg-elevated); border-radius: var(--radius-md); padding: 0.875rem 1rem; margin-bottom: 0.625rem; font-size: 0.85rem; color: var(--clr-text-secondary); display: flex; gap: 0.5rem; align-items: flex-start; }
-    .print-header { display: none; }
-    @media print {
-      .print-header { display: block; text-align: center; margin-bottom: 2rem; }
-      .print-header h1 { font-size: 1.5rem; color: #0f172a !important; -webkit-text-fill-color: #0f172a !important; }
-    }
-    @media (max-width: 768px) { .results-grid { grid-template-columns: 1fr; } }
-  </style>
-</head>
-<body>
-<div class="app-layout">
-  <div id="sidebar-root"></div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Resultados — Sumaq Llank'ay</title>
+    <meta
+      name="description"
+      content="Dashboard de resultados de la evaluación de riesgos ergonómicos y psicosociales SIGA."
+    />
+    <link rel="stylesheet" href="../css/styles.css" />
 
-  <main class="main-content">
-    <!-- HEADER PARA IMPRESIÓN -->
-    <div class="print-header">
-      <h1>INFORME DE EVALUACIÓN DE RIESGOS LABORALES</h1>
-      <p id="print-empresa"></p>
-      <p id="print-fecha"></p>
-    </div>
-
-    <div class="topbar">
-      <div class="topbar-breadcrumb">
-        <a href="../index.html">🏠 Inicio</a><span>/</span>
-        <span class="current">Dashboard de Resultados</span>
-      </div>
-      <div class="topbar-actions">
-        <button class="btn btn-success btn-sm" onclick="window.print()">🖨️ Imprimir Informe</button>
-        <button class="btn btn-secondary btn-sm" onclick="SIGA.save()">💾 Guardar</button>
-      </div>
-    </div>
-
-    <div class="page-header fade-in">
-      <p class="page-tag">📊 Resultados Finales</p>
-      <h1>Dashboard de Evaluación</h1>
-      <p>Resumen integrado de los tres módulos de evaluación. Use el botón "Imprimir Informe" para generar el PDF.</p>
-    </div>
-
-    <!-- DATOS DEL TRABAJADOR (encabezado del informe) -->
-    <div class="card fade-in mb-lg" id="card-identificacion">
-      <div class="card-header">
-        <div class="card-icon card-icon-primary">📋</div>
-        <div>
-          <div class="card-title">Datos de la Evaluación</div>
-          <div class="card-subtitle" id="sub-fecha">—</div>
-        </div>
-      </div>
-      <div id="datos-identificacion" style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem 2rem; font-size:0.875rem;"></div>
-    </div>
-
-    <!-- SEMÁFORO RESUMEN -->
-    <div class="results-grid fade-in">
-      <div class="card">
-        <div class="card-header">
-          <div class="card-icon card-icon-primary">🚦</div>
-          <div>
-            <div class="card-title">Semáforo de Riesgos</div>
-            <div class="card-subtitle">Resultado integrado de los tres módulos</div>
-          </div>
-        </div>
-        <div id="semaforo-container">
-          <div class="semaforo-row">
-            <div class="semaforo-dot" id="dot-reba"></div>
-            <div class="semaforo-label">REBA — Cuerpo entero</div>
-            <div class="semaforo-val" id="val-reba">—</div>
-            <span class="risk-badge" id="badge-reba">—</span>
-          </div>
-          <div class="semaforo-row">
-            <div class="semaforo-dot" id="dot-rula"></div>
-            <div class="semaforo-label">RULA — Miembros superiores</div>
-            <div class="semaforo-val" id="val-rula">—</div>
-            <span class="risk-badge" id="badge-rula">—</span>
-          </div>
-          <div class="semaforo-row">
-            <div class="semaforo-dot" id="dot-psico"></div>
-            <div class="semaforo-label">Psicosocial — 7 dimensiones</div>
-            <div class="semaforo-val" id="val-psico">—</div>
-            <span class="risk-badge" id="badge-psico">—</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- GRÁFICA RADAR PSICOSOCIAL -->
-      <div class="card">
-        <div class="card-header">
-          <div class="card-icon card-icon-cyan">🕸️</div>
-          <div>
-            <div class="card-title">Perfil Psicosocial</div>
-            <div class="card-subtitle">Puntuación por dimensión (%)</div>
-          </div>
-        </div>
-        <div class="chart-container">
-          <canvas id="radar-chart"></canvas>
-        </div>
-      </div>
-    </div>
-
-    <!-- STAT CARDS -->
-    <div class="dashboard-grid fade-in" id="stat-cards">
-      <div class="stat-card primary">
-        <div class="stat-value" id="stat-reba-val">—</div>
-        <div class="stat-label">Puntaje REBA</div>
-        <div class="stat-sublabel" id="stat-reba-nivel">—</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value" id="stat-rula-val">—</div>
-        <div class="stat-label">Puntaje RULA</div>
-        <div class="stat-sublabel" id="stat-rula-nivel">—</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value" id="stat-psico-val">—%</div>
-        <div class="stat-label">Índice Psicosocial</div>
-        <div class="stat-sublabel" id="stat-psico-nivel">—</div>
-      </div>
-    </div>
-
-    <!-- DETALLE REBA -->
-    <div class="card fade-in mb-lg" id="card-reba">
-      <div class="card-header">
-        <div class="card-icon card-icon-primary">🏋️</div>
-        <div>
-          <div class="card-title">Detalle REBA</div>
-          <div class="card-subtitle">Rapid Entire Body Assessment</div>
-        </div>
-      </div>
-      <div id="detalle-reba"></div>
-    </div>
-
-    <!-- DETALLE RULA -->
-    <div class="card fade-in mb-lg" id="card-rula">
-      <div class="card-header">
-        <div class="card-icon card-icon-cyan">💪</div>
-        <div>
-          <div class="card-title">Detalle RULA</div>
-          <div class="card-subtitle">Rapid Upper Limb Assessment</div>
-        </div>
-      </div>
-      <div id="detalle-rula"></div>
-    </div>
-
-    <!-- DETALLE PSICOSOCIAL POR DIMENSIÓN -->
-    <div class="card fade-in mb-lg">
-      <div class="card-header">
-        <div class="card-icon card-icon-primary">🧠</div>
-        <div>
-          <div class="card-title">Detalle por Dimensión Psicosocial</div>
-          <div class="card-subtitle">Puntuación, nivel y recomendaciones por área</div>
-        </div>
-      </div>
-      <div id="detalle-psicosocial"></div>
-    </div>
-
-    <!-- RECOMENDACIONES -->
-    <div class="card fade-in mb-lg">
-      <div class="card-header">
-        <div class="card-icon card-icon-warn">💡</div>
-        <div>
-          <div class="card-title">Plan de Controles Recomendados</div>
-          <div class="card-subtitle">Priorizado según nivel de riesgo detectado</div>
-        </div>
-      </div>
-      <div id="recomendaciones-container"></div>
-    </div>
-
-    <!-- CHECKLIST TRAZABILIDAD -->
-    <div class="card fade-in mb-lg">
-      <div class="card-header">
-        <div class="card-icon card-icon-safe">✅</div>
-        <div>
-          <div class="card-title">Control de Calidad — Trazabilidad</div>
-          <div class="card-subtitle">Verificación del monitorista antes de cerrar el informe</div>
-        </div>
-      </div>
-      <div style="display:flex; flex-direction:column; gap:0.5rem;">
-        <label class="score-option"><input type="checkbox"> Se verificó que la postura evaluada corresponde al trabajo habitual</label>
-        <label class="score-option"><input type="checkbox"> Existe evidencia fotográfica o videográfica documentada</label>
-        <label class="score-option"><input type="checkbox"> Los puntajes REBA y RULA pueden reconstruirse desde la evidencia</label>
-        <label class="score-option"><input type="checkbox"> El cuestionario psicosocial fue respondido por el trabajador de forma confidencial</label>
-        <label class="score-option"><input type="checkbox"> Las recomendaciones atacan la causa principal observable</label>
-        <label class="score-option"><input type="checkbox"> Se comunicaron los resultados al responsable SST de la empresa</label>
-      </div>
-    </div>
-
-    <!-- GALERÍA DE EVIDENCIAS -->
-    <div class="card fade-in mb-lg">
-      <div class="card-header">
-        <div class="card-icon card-icon-cyan">📸</div>
-        <div>
-          <div class="card-title">Evidencias Fotográficas y Videográficas</div>
-          <div class="card-subtitle">Registro del ciclo de trabajo observado</div>
-        </div>
-      </div>
-      <div id="dashboard-evidencias-gallery"></div>
-    </div>
-
-    <!-- ADVERTENCIA -->
-    <div class="alert alert-warning fade-in">
-      <span class="alert-icon">⚠️</span>
-      <div class="alert-body">
-        <div class="alert-title">Limitación técnica</div>
-        REBA y RULA son métodos de cribado observacional. Un puntaje elevado no diagnostica lesiones ni determina aptitud laboral. Complemente con evaluación médica ocupacional cuando el nivel de riesgo sea 3 o 4.
-      </div>
-    </div>
-
-    <div class="form-navigation">
-      <a href="psicosocial.html" class="btn btn-secondary">← Volver al Cuestionario</a>
-      <button class="btn btn-success btn-lg" onclick="window.print()">🖨️ Generar Informe PDF</button>
-    </div>
-  </main>
-</div>
-
-<script>
-  SIGA.init('dashboard');
-  document.getElementById('sidebar-root').innerHTML = renderSidebar('dashboard');
-
-  const s = SIGA.state;
-  const ident = s.identificacion || {};
-  const rebaState = s.reba || {};
-  const rulaState = s.rula || {};
-  const psicoState = s.psicosocial || {};
-
-  // ── Datos de identificación ──
-  if (ident.empresa) {
-    document.getElementById('print-empresa').textContent = ident.empresa + (ident.area ? ` · ${ident.area}` : '');
-    document.getElementById('print-fecha').textContent = `Fecha: ${SIGA.formatDate(ident.fechaEval)}`;
-    document.getElementById('sub-fecha').textContent = `Fecha: ${SIGA.formatDate(ident.fechaEval)}`;
-    const campos = [
-      ['Empresa', ident.empresa], ['Área', ident.area], ['Trabajador', ident.trabajador],
-      ['Puesto', ident.puesto], ['Tarea', ident.tarea], ['Monitorista', ident.monitorista],
-      ['Turno', ident.turno], ['Fase evaluada', ident.fase]
-    ];
-    document.getElementById('datos-identificacion').innerHTML = campos
-      .filter(([,v]) => v).map(([k,v]) => `<div><span style="color:var(--clr-text-muted)">${k}:</span> <strong>${v}</strong></div>`).join('');
-  }
-
-  // ── Colores de riesgo REBA ──
-  function rebaColor(nivel) {
-    return ['safe','safe','warn','danger','critical'][nivel] ?? 'safe';
-  }
-  function rulaNivel(puntaje) {
-    if (puntaje <= 2) return { texto: 'Aceptable', color: 'safe', clase: 'inapreciable' };
-    if (puntaje <= 4) return { texto: 'Investigar', color: 'warn', clase: 'bajo' };
-    if (puntaje <= 6) return { texto: 'Cambiar pronto', color: 'danger', clase: 'medio' };
-    return { texto: 'Acción inmediata', color: 'critical', clase: 'muy-alto' };
-  }
-  function psicoColor(pct) {
-    if (pct >= 75) return 'safe';
-    if (pct >= 50) return 'warn';
-    return 'danger';
-  }
-
-  // ── Semáforo ──
-  if (rebaState.puntuacionFinal !== undefined) {
-    const n = rebaState.nivel ?? 0;
-    document.getElementById('dot-reba').className = `semaforo-dot ${rebaColor(n)}`;
-    document.getElementById('val-reba').textContent = rebaState.puntuacionFinal;
-    const b = document.getElementById('badge-reba');
-    b.textContent = rebaState.riesgo ?? '—';
-    b.className = `risk-badge ${['inapreciable','bajo','medio','alto','muy-alto'][n]}`;
-    const sc = document.getElementById('stat-reba-val');
-    sc.textContent = rebaState.puntuacionFinal;
-    sc.parentElement.className = `stat-card ${['safe','safe','warn','danger','danger'][n]}`;
-    document.getElementById('stat-reba-nivel').textContent = `Nivel ${n} — ${rebaState.riesgo}`;
-  }
-
-  if (rulaState.puntuacionFinal !== undefined) {
-    const r = rulaNivel(rulaState.puntuacionFinal);
-    document.getElementById('dot-rula').className = `semaforo-dot ${r.color}`;
-    document.getElementById('val-rula').textContent = rulaState.puntuacionFinal;
-    const b = document.getElementById('badge-rula');
-    b.textContent = r.texto; b.className = `risk-badge ${r.clase}`;
-    document.getElementById('stat-rula-val').textContent = rulaState.puntuacionFinal;
-    document.getElementById('stat-rula-nivel').textContent = r.texto;
-  }
-
-  if (psicoState.promedioGlobal !== undefined) {
-    const pct = psicoState.promedioGlobal;
-    const c = psicoColor(pct);
-    document.getElementById('dot-psico').className = `semaforo-dot ${c}`;
-    document.getElementById('val-psico').textContent = pct + '%';
-    const nivel = pct >= 75 ? 'Adecuado' : pct >= 50 ? 'Moderado' : 'Elevado';
-    const b = document.getElementById('badge-psico');
-    b.textContent = nivel;
-    b.className = `risk-badge ${pct >= 75 ? 'inapreciable' : pct >= 50 ? 'medio' : 'muy-alto'}`;
-    document.getElementById('stat-psico-val').textContent = pct + '%';
-    document.getElementById('stat-psico-nivel').textContent = nivel;
-  }
-
-  // ── Detalle REBA ──
-  if (rebaState.puntuacionFinal !== undefined) {
-    const r = rebaState;
-    document.getElementById('detalle-reba').innerHTML = `
-      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:0.75rem; margin-bottom:1rem;">
-        <div style="background:var(--clr-bg-elevated); border-radius:var(--radius-md); padding:0.875rem; text-align:center;">
-          <div style="font-size:1.5rem; font-weight:800; color:var(--clr-primary-light)">${r.puntuacionA ?? '—'}</div>
-          <div style="font-size:0.72rem; color:var(--clr-text-muted);">Puntaje A</div>
-        </div>
-        <div style="background:var(--clr-bg-elevated); border-radius:var(--radius-md); padding:0.875rem; text-align:center;">
-          <div style="font-size:1.5rem; font-weight:800; color:var(--clr-cyan)">${r.puntuacionB ?? '—'}</div>
-          <div style="font-size:0.72rem; color:var(--clr-text-muted);">Puntaje B</div>
-        </div>
-        <div style="background:var(--clr-bg-elevated); border-radius:var(--radius-md); padding:0.875rem; text-align:center;">
-          <div style="font-size:1.5rem; font-weight:800; color:var(--clr-text-primary)">${r.puntuacionFinal}</div>
-          <div style="font-size:0.72rem; color:var(--clr-text-muted);">Puntaje Final</div>
-        </div>
-      </div>
-      <div class="alert ${r.nivel >= 3 ? 'alert-danger' : r.nivel >= 2 ? 'alert-warning' : 'alert-success'}">
-        <span class="alert-icon">${r.nivel >= 3 ? '🚨' : r.nivel >= 2 ? '⚠️' : '✅'}</span>
-        <div class="alert-body">
-          <div class="alert-title">Nivel ${r.nivel} — Riesgo ${r.riesgo}</div>
-          ${r.accion}
-        </div>
-      </div>`;
-  }
-
-  // ── Detalle RULA ──
-  if (rulaState.puntuacionFinal !== undefined) {
-    const r = rulaState;
-    const nivel = rulaNivel(r.puntuacionFinal);
-    document.getElementById('detalle-rula').innerHTML = `
-      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:0.75rem; margin-bottom:1rem;">
-        <div style="background:var(--clr-bg-elevated); border-radius:var(--radius-md); padding:0.875rem; text-align:center;">
-          <div style="font-size:1.5rem; font-weight:800; color:var(--clr-primary-light)">${r.puntajeC ?? '—'}</div>
-          <div style="font-size:0.72rem; color:var(--clr-text-muted);">Puntaje C (brazo/muñeca)</div>
-        </div>
-        <div style="background:var(--clr-bg-elevated); border-radius:var(--radius-md); padding:0.875rem; text-align:center;">
-          <div style="font-size:1.5rem; font-weight:800; color:var(--clr-cyan)">${r.puntajeD ?? '—'}</div>
-          <div style="font-size:0.72rem; color:var(--clr-text-muted);">Puntaje D (cuello/tronco)</div>
-        </div>
-        <div style="background:var(--clr-bg-elevated); border-radius:var(--radius-md); padding:0.875rem; text-align:center;">
-          <div style="font-size:1.5rem; font-weight:800; color:var(--clr-text-primary)">${r.puntuacionFinal}</div>
-          <div style="font-size:0.72rem; color:var(--clr-text-muted);">Puntaje Final</div>
-        </div>
-      </div>
-      <div class="alert ${nivel.color === 'critical' || nivel.color === 'danger' ? 'alert-danger' : nivel.color === 'warn' ? 'alert-warning' : 'alert-success'}">
-        <span class="alert-icon">${nivel.color === 'critical' ? '🚨' : nivel.color === 'warn' ? '⚠️' : '✅'}</span>
-        <div class="alert-body">
-          <div class="alert-title">Nivel ${r.nivel} — ${nivel.texto}</div>
-          ${r.accion ?? ''}
-        </div>
-      </div>`;
-  }
-
-  // ── Detalle Psicosocial ──
-  if (psicoState.dimensiones) {
-    let html = '';
-    PSICO.dimensiones.forEach(dim => {
-      const r = psicoState.dimensiones?.[dim.id];
-      if (!r || r.pct === null) return;
-      const colorMap = { safe: 'var(--clr-safe)', warn: 'var(--clr-warn)', danger: 'var(--clr-danger)' };
-      const color = colorMap[r.clase] ?? 'var(--clr-text-muted)';
-      html += `
-        <div class="semaforo-row">
-          <div class="semaforo-dot ${r.clase}"></div>
-          <div class="semaforo-label">${dim.icono} ${dim.nombre}</div>
-          <div class="semaforo-val" style="color:${color}">${r.pct}%</div>
-          <span class="risk-badge ${r.clase === 'safe' ? 'inapreciable' : r.clase === 'warn' ? 'medio' : 'muy-alto'}">${r.nivelTexto}</span>
-        </div>`;
-    });
-    document.getElementById('detalle-psicosocial').innerHTML = html || '<p style="color:var(--clr-text-muted)">Sin datos del cuestionario psicosocial.</p>';
-  }
-
-  // ── Recomendaciones ──
-  let recsHtml = '';
-  // REBA
-  if (rebaState.nivel >= 2) {
-    recsHtml += `<div style="font-weight:700; color:var(--clr-primary-light); margin:0.75rem 0 0.5rem;">🏋️ Recomendaciones REBA (Riesgo: ${rebaState.riesgo})</div>`;
-    const recsReba = {
-      tronco: 'Elevar el punto de toma, acercar el material, reorganizar el layout y facilitar el giro con los pies.',
-      carga: 'Disminuir peso, usar ayudas mecánicas, dividir la carga y controlar la velocidad.',
-      acoplamiento: 'Incorporar mangos, mejorar diámetro y ubicación, evitar bordes cortantes.',
-      brazo: 'Reubicar controles y materiales, ajustar altura, usar apoyo de antebrazo o rediseñar la herramienta.',
-    };
-    Object.values(recsReba).forEach(r => {
-      recsHtml += `<div class="recomendacion-card"><span>🔧</span><span>${r}</span></div>`;
-    });
-  }
-  // RULA
-  if (rulaState.nivel >= 2) {
-    recsHtml += `<div style="font-weight:700; color:var(--clr-cyan); margin:0.75rem 0 0.5rem;">💪 Recomendaciones RULA (Nivel: ${rulaNivel(rulaState.puntuacionFinal).texto})</div>`;
-    ['Ajustar altura del plano de trabajo y acercar materiales para reducir la elevación del hombro.',
-     'Cambiar la orientación de la herramienta o usar mango adecuado para reducir la desviación de muñeca.',
-     'Elevar el objeto o la pantalla y mejorar la visibilidad para reducir la flexión de cuello.',
-     'Rediseñar el método de trabajo, automatizar o asistir, y establecer pausas organizadas.']
-    .forEach(r => {
-      recsHtml += `<div class="recomendacion-card"><span>🔧</span><span>${r}</span></div>`;
-    });
-  }
-  // Psicosocial
-  if (psicoState.dimensiones) {
-    const elevadasPsico = PSICO.dimensiones.filter(dim => {
-      const r = psicoState.dimensiones?.[dim.id];
-      return r && r.clase === 'danger';
-    });
-    if (elevadasPsico.length > 0) {
-      recsHtml += `<div style="font-weight:700; color:var(--clr-danger); margin:0.75rem 0 0.5rem;">🧠 Dimensiones Psicosociales con Riesgo Elevado</div>`;
-      elevadasPsico.forEach(dim => {
-        const recs = PSICO.recomendaciones[dim.id] ?? [];
-        recs.forEach(r => {
-          recsHtml += `<div class="recomendacion-card"><span>${dim.icono}</span><span><strong>${dim.nombre}:</strong> ${r}</span></div>`;
-        });
-      });
-    }
-  }
-  if (!recsHtml) {
-    recsHtml = `<div class="alert alert-success"><span class="alert-icon">✅</span><div class="alert-body"><div class="alert-title">Niveles aceptables</div>No se identificaron riesgos que requieran acción prioritaria. Mantener vigilancia periódica.</div></div>`;
-  }
-  document.getElementById('recomendaciones-container').innerHTML = recsHtml;
-
-  // ── Gráfica Radar Psicosocial ──
-  if (psicoState.dimensiones) {
-    const labels = PSICO.dimensiones.map(d => d.nombre.split(',')[0]);
-    const data = PSICO.dimensiones.map(d => {
-      const r = psicoState.dimensiones?.[d.id];
-      return r?.pct ?? 0;
-    });
-    new Chart(document.getElementById('radar-chart'), {
-      type: 'radar',
-      data: {
-        labels,
-        datasets: [{
-          label: 'Puntuación (%)',
-          data,
-          backgroundColor: 'rgba(99,102,241,0.15)',
-          borderColor: '#6366f1',
-          pointBackgroundColor: '#818cf8',
-          pointBorderColor: '#fff',
-          pointHoverBackgroundColor: '#22d3ee',
-          borderWidth: 2,
-          pointRadius: 4
-        }, {
-          label: 'Umbral adecuado (75%)',
-          data: Array(PSICO.dimensiones.length).fill(75),
-          backgroundColor: 'rgba(16,185,129,0.05)',
-          borderColor: 'rgba(16,185,129,0.4)',
-          borderDash: [5, 5],
-          borderWidth: 1,
-          pointRadius: 0
-        }]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        scales: {
-          r: {
-            min: 0, max: 100,
-            ticks: { stepSize: 25, color: '#64748b', font: { size: 10 }, backdropColor: 'transparent' },
-            grid: { color: 'rgba(255,255,255,0.06)' },
-            pointLabels: { color: '#94a3b8', font: { size: 10, family: 'Inter' } },
-            angleLines: { color: 'rgba(255,255,255,0.06)' }
-          }
-        },
-        plugins: {
-          legend: { labels: { color: '#94a3b8', font: { size: 11 } } },
-          tooltip: { backgroundColor: '#1a2236', titleColor: '#f1f5f9', bodyColor: '#94a3b8' }
+    <style>
+      .results-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+      }
+      .chart-container {
+        position: relative;
+        height: 280px;
+      }
+      .semaforo-row {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.875rem 0;
+        border-bottom: 1px solid var(--clr-border);
+      }
+      .semaforo-row:last-child {
+        border-bottom: none;
+      }
+      .semaforo-dot {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+      .semaforo-dot.safe {
+        background: var(--clr-safe);
+        box-shadow: 0 0 6px var(--clr-safe);
+      }
+      .semaforo-dot.warn {
+        background: var(--clr-warn);
+        box-shadow: 0 0 6px var(--clr-warn);
+      }
+      .semaforo-dot.danger {
+        background: var(--clr-danger);
+        box-shadow: 0 0 6px var(--clr-danger);
+      }
+      .semaforo-dot.critical {
+        background: var(--clr-critical);
+        box-shadow: 0 0 8px var(--clr-critical);
+        animation: pulse-danger 1.5s infinite;
+      }
+      .semaforo-label {
+        flex: 1;
+        font-size: 0.875rem;
+        font-weight: 600;
+      }
+      .semaforo-val {
+        font-size: 1.1rem;
+        font-weight: 800;
+      }
+      .recomendacion-card {
+        background: var(--clr-bg-elevated);
+        border-radius: var(--radius-md);
+        padding: 0.875rem 1rem;
+        margin-bottom: 0.625rem;
+        font-size: 0.85rem;
+        color: var(--clr-text-secondary);
+        display: flex;
+        gap: 0.5rem;
+        align-items: flex-start;
+      }
+      .print-header {
+        display: none;
+      }
+      @media print {
+        .print-header {
+          display: block;
+          text-align: center;
+          margin-bottom: 2rem;
+        }
+        .print-header h1 {
+          font-size: 1.5rem;
+          color: #0f172a !important;
+          -webkit-text-fill-color: #0f172a !important;
         }
       }
-    });
-  }
+      @media (max-width: 768px) {
+        .results-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+    <link rel="stylesheet" href="/css/responsive.css" />
+    <meta name="theme-color" content="#151b2e" />
+  </head>
+  <body data-page="dashboard">
+    <div class="app-layout">
+      <div id="sidebar-root"></div>
 
-  // ── Galería de Evidencias ──
-  const evaluacionId = localStorage.getItem('siga_evaluacion_id');
-  if (evaluacionId) {
-    EVIDENCIAS.renderDashboardGallery(evaluacionId, 'dashboard-evidencias-gallery');
-  }
-</script>
-</body>
+      <main class="main-content">
+        <!-- HEADER PARA IMPRESIÓN -->
+        <div class="print-header">
+          <h1>INFORME DE EVALUACIÓN DE RIESGOS LABORALES</h1>
+          <p id="print-empresa"></p>
+          <p id="print-fecha"></p>
+        </div>
+
+        <div class="topbar">
+          <div class="topbar-breadcrumb">
+            <a href="../index.html">🏠 Inicio</a><span>/</span>
+            <span class="current">Dashboard de Resultados</span>
+          </div>
+          <div class="topbar-actions">
+            <button class="btn btn-success btn-sm" data-action="print">
+              🖨️ Imprimir Informe
+            </button>
+            <button class="btn btn-secondary btn-sm" data-action="save">
+              💾 Guardar
+            </button>
+          </div>
+        </div>
+
+        <div class="page-header fade-in">
+          <p class="page-tag">📊 Resultados Finales</p>
+          <h1>Dashboard de Evaluación</h1>
+          <p>
+            Resumen integrado de los tres módulos de evaluación. Use el botón
+            "Imprimir Informe" para generar el PDF.
+          </p>
+        </div>
+
+        <!-- DATOS DEL TRABAJADOR (encabezado del informe) -->
+        <div class="card fade-in mb-lg" id="card-identificacion">
+          <div class="card-header">
+            <div class="card-icon card-icon-primary">📋</div>
+            <div>
+              <div class="card-title">Datos de la Evaluación</div>
+              <div class="card-subtitle" id="sub-fecha">—</div>
+            </div>
+          </div>
+          <div
+            id="datos-identificacion"
+            style="
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 0.5rem 2rem;
+              font-size: 0.875rem;
+            "
+          ></div>
+        </div>
+
+        <!-- SEMÁFORO RESUMEN -->
+        <div class="results-grid fade-in">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-icon card-icon-primary">🚦</div>
+              <div>
+                <div class="card-title">Semáforo de Riesgos</div>
+                <div class="card-subtitle">
+                  Resultado integrado de los tres módulos
+                </div>
+              </div>
+            </div>
+            <div id="semaforo-container">
+              <div class="semaforo-row">
+                <div class="semaforo-dot" id="dot-reba"></div>
+                <div class="semaforo-label">REBA — Cuerpo entero</div>
+                <div class="semaforo-val" id="val-reba">—</div>
+                <span class="risk-badge" id="badge-reba">—</span>
+              </div>
+              <div class="semaforo-row">
+                <div class="semaforo-dot" id="dot-rula"></div>
+                <div class="semaforo-label">RULA — Miembros superiores</div>
+                <div class="semaforo-val" id="val-rula">—</div>
+                <span class="risk-badge" id="badge-rula">—</span>
+              </div>
+              <div class="semaforo-row">
+                <div class="semaforo-dot" id="dot-psico"></div>
+                <div class="semaforo-label">Psicosocial — 7 dimensiones</div>
+                <div class="semaforo-val" id="val-psico">—</div>
+                <span class="risk-badge" id="badge-psico">—</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- GRÁFICA RADAR PSICOSOCIAL -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-icon card-icon-cyan">🕸️</div>
+              <div>
+                <div class="card-title">Perfil Psicosocial</div>
+                <div class="card-subtitle">Puntuación por dimensión (%)</div>
+              </div>
+            </div>
+            <div class="chart-container">
+              <canvas id="radar-chart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- STAT CARDS -->
+        <div class="dashboard-grid fade-in" id="stat-cards">
+          <div class="stat-card primary">
+            <div class="stat-value" id="stat-reba-val">—</div>
+            <div class="stat-label">Puntaje REBA</div>
+            <div class="stat-sublabel" id="stat-reba-nivel">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="stat-rula-val">—</div>
+            <div class="stat-label">Puntaje RULA</div>
+            <div class="stat-sublabel" id="stat-rula-nivel">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="stat-psico-val">—%</div>
+            <div class="stat-label">Índice Psicosocial</div>
+            <div class="stat-sublabel" id="stat-psico-nivel">—</div>
+          </div>
+        </div>
+
+        <!-- DETALLE REBA -->
+        <div class="card fade-in mb-lg" id="card-reba">
+          <div class="card-header">
+            <div class="card-icon card-icon-primary">🏋️</div>
+            <div>
+              <div class="card-title">Detalle REBA</div>
+              <div class="card-subtitle">Rapid Entire Body Assessment</div>
+            </div>
+          </div>
+          <div id="detalle-reba"></div>
+        </div>
+
+        <!-- DETALLE RULA -->
+        <div class="card fade-in mb-lg" id="card-rula">
+          <div class="card-header">
+            <div class="card-icon card-icon-cyan">💪</div>
+            <div>
+              <div class="card-title">Detalle RULA</div>
+              <div class="card-subtitle">Rapid Upper Limb Assessment</div>
+            </div>
+          </div>
+          <div id="detalle-rula"></div>
+        </div>
+
+        <!-- DETALLE PSICOSOCIAL POR DIMENSIÓN -->
+        <div class="card fade-in mb-lg">
+          <div class="card-header">
+            <div class="card-icon card-icon-primary">🧠</div>
+            <div>
+              <div class="card-title">Detalle por Dimensión Psicosocial</div>
+              <div class="card-subtitle">
+                Puntuación, nivel y recomendaciones por área
+              </div>
+            </div>
+          </div>
+          <div id="detalle-psicosocial"></div>
+        </div>
+
+        <!-- RECOMENDACIONES -->
+        <div class="card fade-in mb-lg">
+          <div class="card-header">
+            <div class="card-icon card-icon-warn">💡</div>
+            <div>
+              <div class="card-title">Plan de Controles Recomendados</div>
+              <div class="card-subtitle">
+                Priorizado según nivel de riesgo detectado
+              </div>
+            </div>
+          </div>
+          <div id="recomendaciones-container"></div>
+        </div>
+
+        <!-- CHECKLIST TRAZABILIDAD -->
+        <div class="card fade-in mb-lg">
+          <div class="card-header">
+            <div class="card-icon card-icon-safe">✅</div>
+            <div>
+              <div class="card-title">Control de Calidad — Trazabilidad</div>
+              <div class="card-subtitle">
+                Verificación del monitorista antes de cerrar el informe
+              </div>
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 0.5rem">
+            <label class="score-option"
+              ><input type="checkbox" /> Se verificó que la postura evaluada
+              corresponde al trabajo habitual</label
+            >
+            <label class="score-option"
+              ><input type="checkbox" /> Existe evidencia fotográfica o
+              videográfica documentada</label
+            >
+            <label class="score-option"
+              ><input type="checkbox" /> Los puntajes REBA y RULA pueden
+              reconstruirse desde la evidencia</label
+            >
+            <label class="score-option"
+              ><input type="checkbox" /> El cuestionario psicosocial fue
+              respondido por el trabajador de forma confidencial</label
+            >
+            <label class="score-option"
+              ><input type="checkbox" /> Las recomendaciones atacan la causa
+              principal observable</label
+            >
+            <label class="score-option"
+              ><input type="checkbox" /> Se comunicaron los resultados al
+              responsable SST de la empresa</label
+            >
+          </div>
+        </div>
+
+        <!-- GALERÍA DE EVIDENCIAS -->
+        <div class="card fade-in mb-lg">
+          <div class="card-header">
+            <div class="card-icon card-icon-cyan">📸</div>
+            <div>
+              <div class="card-title">
+                Evidencias Fotográficas y Videográficas
+              </div>
+              <div class="card-subtitle">
+                Registro del ciclo de trabajo observado
+              </div>
+            </div>
+          </div>
+          <div id="dashboard-evidencias-gallery"></div>
+        </div>
+
+        <!-- ADVERTENCIA -->
+        <div class="alert alert-warning fade-in">
+          <span class="alert-icon">⚠️</span>
+          <div class="alert-body">
+            <div class="alert-title">Limitación técnica</div>
+            REBA y RULA son métodos de cribado observacional. Un puntaje elevado
+            no diagnostica lesiones ni determina aptitud laboral. Complemente
+            con evaluación médica ocupacional cuando el nivel de riesgo sea 3 o
+            4.
+          </div>
+        </div>
+
+        <div class="form-navigation">
+          <a href="psicosocial.html" class="btn btn-secondary"
+            >← Volver al Cuestionario</a
+          >
+          <button class="btn btn-success btn-lg" data-action="print">
+            🖨️ Generar Informe PDF
+          </button>
+        </div>
+      </main>
+    </div>
+
+    <script type="module" src="/js/main.js"></script>
+  </body>
 </html>

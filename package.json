@@ -1,0 +1,33 @@
+{
+  "name": "sumaq-llankay",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0 <23.0.0"
+  },
+  "scripts": {
+    "start": "vite --host 127.0.0.1",
+    "dev": "vite --host 127.0.0.1",
+    "dev:lan": "vite --host 0.0.0.0 --port 5174 --strictPort",
+    "build": "vite build",
+    "build:release": "node scripts/build-release.mjs",
+    "preview": "vite preview --host 127.0.0.1",
+    "test": "node --test tests/*.test.js",
+    "check": "npm run test && npm run build",
+    "backup": "node scripts/backup.mjs",
+    "cloudinary:secure": "node --env-file=.env scripts/secure-cloudinary.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "2.119.0",
+    "chart.js": "4.6.1"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.5.16",
+    "deno": "2.9.6",
+    "fake-indexeddb": "6.2.8",
+    "jsdom": "29.1.1",
+    "prettier": "3.9.10",
+    "vite": "8.3.7"
+  }
+}

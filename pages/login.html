@@ -1,114 +1,169 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Iniciar Sesión — Sumaq Llank'ay</title>
-  <meta name="description" content="Acceso a Sumaq Llank'ay — Sistema de Evaluación de Riesgos Laborales.">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../css/styles.css">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../js/config.js"></script>
-  <script src="../js/auth.js"></script>
-</head>
-<body class="login-page">
-
-<div class="login-container">
-  <div class="login-bg"></div>
-
-  <div class="login-card">
-    <!-- Logo sin rayo -->
-    <div class="login-logo">
-      <div class="login-logo-text">Sumaq Llank'ay</div>
-    </div>
-
-    <h1 class="login-title">Bienvenido de vuelta</h1>
-    <p class="login-subtitle">Ingrese sus credenciales para acceder al sistema de evaluación</p>
-
-    <!-- Error message -->
-    <div class="login-error" id="login-error">
-      <span>❌</span>
-      <span id="login-error-text"></span>
-    </div>
-
-    <!-- Login Form -->
-    <form id="login-form" novalidate>
-      <div class="login-form-group">
-        <label for="login-email">Correo electrónico</label>
-        <input class="form-input" type="email" id="login-email" placeholder="evaluador@empresa.com" required autocomplete="email">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#151b2e" />
+    <meta
+      name="description"
+      content="Acceso de evaluadores a Sumaq Llank’ay. Registra evaluaciones ergonómicas, conserva evidencias y consulta informes."
+    />
+    <title>Acceso de evaluadores — Sumaq Llank’ay</title>
+    <link rel="stylesheet" href="../css/styles.css" />
+    <link rel="stylesheet" href="../css/public.css" />
+    <link rel="stylesheet" href="/css/responsive.css" />
+  </head>
+  <body class="login-page" data-page="login">
+    <a class="skip-link" href="#login-form">Ir al acceso</a>
+    <main class="login-container">
+      <div class="login-bg" aria-hidden="true"></div>
+      <div class="auth-shell">
+        <section class="auth-intro" aria-labelledby="auth-intro-title">
+          <a
+            class="auth-brand"
+            href="../index.html"
+            aria-label="Sumaq Llank’ay, inicio"
+          >
+            <img src="../img/mascota.png" alt="" width="58" height="64" />
+            <span
+              >Sumaq Llank’ay<small
+                >Evaluación de riesgos laborales</small
+              ></span
+            >
+          </a>
+          <div class="auth-intro-copy">
+            <span class="auth-eyebrow"
+              >Observación · Evaluación · Seguimiento</span
+            >
+            <h2 id="auth-intro-title">
+              Del registro de campo<br />al informe de evaluación.
+            </h2>
+            <p>
+              Un espacio para documentar el trabajo, evaluar las posturas y dar
+              seguimiento a las medidas de control.
+            </p>
+            <ol class="auth-features">
+              <li>
+                <span aria-hidden="true">01</span>
+                <div>
+                  <strong>Registra el contexto</strong>
+                  <p>Datos del puesto, la tarea y la observación.</p>
+                </div>
+              </li>
+              <li>
+                <span aria-hidden="true">02</span>
+                <div>
+                  <strong>Evalúa con evidencias</strong>
+                  <p>REBA, RULA y cuestionario exploratorio.</p>
+                </div>
+              </li>
+              <li>
+                <span aria-hidden="true">03</span>
+                <div>
+                  <strong>Conserva y da seguimiento</strong>
+                  <p>Resultados revisados y medidas con responsable.</p>
+                </div>
+              </li>
+            </ol>
+          </div>
+          <p class="auth-intro-note">
+            Una herramienta de apoyo al profesional de seguridad y salud en el
+            trabajo.
+          </p>
+        </section>
+        <section class="login-card" aria-labelledby="login-title">
+          <div class="auth-access-icon" aria-hidden="true">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.7"
+            >
+              <rect x="5" y="10" width="14" height="11" rx="3" />
+              <path d="M8 10V7a4 4 0 0 1 8 0v3m-4 5v2" />
+            </svg>
+          </div>
+          <p class="auth-eyebrow" id="login-eyebrow">Acceso de evaluadores</p>
+          <h1 class="login-title" id="login-title">Bienvenido a tu espacio</h1>
+          <p class="login-subtitle" id="login-subtitle">
+            Continúa tus evaluaciones y consulta tus informes.
+          </p>
+          <div class="login-error" id="login-error" role="alert">
+            <span id="login-error-text"></span>
+          </div>
+          <div
+            class="auth-feedback"
+            id="login-feedback"
+            role="status"
+            hidden
+          ></div>
+          <form id="login-form" novalidate>
+            <div class="login-form-group">
+              <label for="login-email">Correo electrónico</label>
+              <input
+                class="form-input"
+                type="email"
+                id="login-email"
+                placeholder="nombre@empresa.com"
+                required
+                autocomplete="username"
+                inputmode="email"
+                autocapitalize="none"
+                spellcheck="false"
+              />
+            </div>
+            <div class="login-form-group">
+              <label for="login-password">Contraseña</label>
+              <div class="auth-password">
+                <input
+                  class="form-input"
+                  type="password"
+                  id="login-password"
+                  placeholder="Ingresa tu contraseña"
+                  required
+                  autocomplete="current-password"
+                />
+                <button
+                  class="auth-password-toggle"
+                  id="password-toggle"
+                  type="button"
+                  aria-label="Mostrar contraseña"
+                  aria-controls="login-password"
+                  aria-pressed="false"
+                >
+                  Mostrar
+                </button>
+              </div>
+            </div>
+            <button class="auth-recovery" id="login-recovery" type="button">
+              ¿Olvidaste tu contraseña?
+            </button>
+            <button
+              type="submit"
+              class="btn btn-primary btn-full btn-lg"
+              id="login-btn"
+            >
+              Iniciar sesión <span aria-hidden="true">→</span>
+            </button>
+          </form>
+          <p class="auth-account-note" id="login-account-note">
+            ¿Necesitas una cuenta? Solicítala al administrador de tu
+            organización.
+          </p>
+          <div class="auth-help">
+            <span>¿Es tu primera evaluación?</span
+            ><a href="ayuda.html"
+              >Consulta la guía de uso <span aria-hidden="true">↗</span></a
+            >
+          </div>
+        </section>
       </div>
-
-      <div class="login-form-group">
-        <label for="login-password">Contraseña</label>
-        <input class="form-input" type="password" id="login-password" placeholder="••••••••" required autocomplete="current-password">
-      </div>
-
-      <button type="submit" class="btn btn-primary btn-full btn-lg" id="login-btn">
-        🔐 Iniciar Sesión
-      </button>
-    </form>
-
-    <div class="login-footer">
-      Sumaq Llank'ay — v1.0<br>
-      RM 375-2008-TR · Ley N.° 29783
-    </div>
-  </div>
-</div>
-
-<script>
-  AUTH.init();
-
-  // Si ya hay sesión activa, redirigir al inicio
-  (async () => {
-    const session = await AUTH.getSession();
-    if (session) {
-      window.location.replace('../index.html');
-      return;
-    }
-  })();
-
-  // Manejar submit del formulario
-  document.getElementById('login-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    const email = document.getElementById('login-email').value.trim();
-    const password = document.getElementById('login-password').value;
-    const btn = document.getElementById('login-btn');
-    const errorEl = document.getElementById('login-error');
-    const errorText = document.getElementById('login-error-text');
-
-    if (!email || !password) {
-      errorText.textContent = 'Complete todos los campos.';
-      errorEl.classList.add('show');
-      return;
-    }
-
-    // Estado de carga
-    btn.disabled = true;
-    btn.textContent = '⏳ Ingresando...';
-    errorEl.classList.remove('show');
-
-    const result = await AUTH.login(email, password);
-
-    if (result.success) {
-      btn.textContent = '✅ ¡Bienvenido!';
-      setTimeout(() => {
-        window.location.replace('../index.html');
-      }, 500);
-    } else {
-      errorText.textContent = result.error;
-      errorEl.classList.add('show');
-      btn.disabled = false;
-      btn.textContent = '🔐 Iniciar Sesión';
-    }
-  });
-
-  // Enter para enviar
-  document.getElementById('login-password').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') document.getElementById('login-form').requestSubmit();
-  });
-</script>
-</body>
+    </main>
+    <footer class="auth-footer">
+      <span>Sumaq Llank’ay · Versión 2.0</span
+      ><a href="ayuda.html#antes-de-empezar">Antes de empezar</a
+      ><span>Herramienta de apoyo SST</span>
+    </footer>
+    <script type="module" src="/js/main.js"></script>
+  </body>
 </html>
