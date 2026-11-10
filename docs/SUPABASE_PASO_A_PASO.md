@@ -1,6 +1,6 @@
 # Supabase: scripts y puesta en marcha de la versión 2
 
-Estos archivos están preparados y probados en una base aislada. **No se han ejecutado en tu proyecto real.** Subir el código a GitHub no aplica SQL, no configura Auth y no despliega la función de servidor.
+Estos archivos se aplican por proyecto y se han probado en una base aislada. Antes de ejecutarlos, comprueba el estado del proyecto de destino. Subir el código a GitHub no aplica SQL, no configura Auth y no despliega la función de servidor.
 
 ## Qué ejecutar y en qué orden
 
@@ -102,4 +102,12 @@ Antes de retirar mantenimiento, prueba dos evaluadores y un administrador: acces
 
 No hacen falta buckets de Supabase Storage para esta versión: los originales multimedia se gestionan en Cloudinary. Configura también el mantenimiento periódico y las alertas descritos en [DESPLIEGUE.md](DESPLIEGUE.md).
 
-Referencias oficiales: [migraciones](https://supabase.com/docs/guides/deployment/database-migrations), [secretos de funciones](https://supabase.com/docs/guides/functions/secrets) y [despliegue de funciones](https://supabase.com/docs/guides/functions/deploy).
+### Mantenimiento periódico opcional
+
+El archivo [04_mantenimiento_programado.sql](../supabase/sql/04_mantenimiento_programado.sql) prepara un trabajo cada cinco minutos con `pg_cron` y `pg_net`. Requiere V2 verificada, `siga-api` activa y autorización administrativa para crear extensiones, guardar el secreto limitado en Vault y ejecutar llamadas periódicas. No se activa automáticamente al publicar la interfaz.
+
+Utiliza una copia privada del archivo, sustituye la URL y la asignación inicial de `MAINTENANCE_SECRET_REEMPLAZAR` por el mismo secreto de la función y conserva los controles que rechazan los marcadores sin sustituir. No uses una clave de servicio para el mantenimiento ni subas la copia privada al repositorio. El archivo público debe conservar sus marcadores.
+
+La cola de `pg_net` contiene temporalmente la cabecera de autorización; el script restringe su esquema, tablas y funciones para los roles del navegador. La función administrativa tiene ejecución exclusivamente de servidor y el job solo guarda una llamada a esa función, sin incluir el secreto en el texto del cron. Después de aplicarlo, verifica el job y una respuesta HTTP real; el alta del cron no acredita que el mantenimiento funcione. Para otro programador privado, sigue el procedimiento de DESPLIEGUE.md.
+
+Referencias oficiales: [migraciones](https://supabase.com/docs/guides/deployment/database-migrations), [secretos de funciones](https://supabase.com/docs/guides/functions/secrets), [despliegue de funciones](https://supabase.com/docs/guides/functions/deploy) y [programación de funciones](https://supabase.com/docs/guides/functions/schedule-functions).

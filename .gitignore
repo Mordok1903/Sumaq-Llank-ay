@@ -19,6 +19,7 @@ dist/
 backups/
 test-results/
 .supabase/
+supabase/.temp/
 
 # Informes internos con observaciones de las cuentas reales; conservar solo localmente.
 AUDITORIA_CODIGO.md

@@ -1,6 +1,6 @@
 # Integración y despliegue después de aprobar la prueba local
 
-Este procedimiento está preparado; no se ha ejecutado contra producción. La migración v2 revoca escrituras del cliente anterior y cambia expedientes antiguos a revisión. Publicar solo la interfaz o aplicar solo la migración interrumpiría el cliente v1. Planificar un cambio coordinado con copia y ventana de mantenimiento.
+Este procedimiento describe la instalación o transición de cada proyecto. La migración v2 revoca escrituras del cliente anterior y cambia expedientes antiguos a revisión. Publicar solo la interfaz o aplicar solo la migración interrumpiría el cliente v1. Planificar un cambio coordinado con copia y ventana de mantenimiento.
 
 Para ejecutar los archivos SQL y comandos en orden, consultar [Supabase paso a paso](SUPABASE_PASO_A_PASO.md). Para el uso diario, consultar [la guía de usuario](GUIA_USUARIO.md).
 
@@ -84,6 +84,8 @@ Referencias: [preset administrativo](https://cloudinary.com/documentation/admin_
 
 Configurar un programador privado cada cinco minutos que envíe POST a `/functions/v1/siga-api` con cuerpo `{"action":"maintenance"}` y Authorization Bearer `MAINTENANCE_SECRET`. No incluir Origin. El secreto solo permite mantenimiento; no operaciones de usuario.
 
+Para Supabase Cron, el archivo opcional `supabase/sql/04_mantenimiento_programado.sql` prepara extensiones, almacenamiento del secreto en Vault y una función restringida de mantenimiento. Debe aplicarse y verificarse por administración; la publicación de la interfaz no crea el trabajo. Conservar el secreto real únicamente en una copia privada del archivo. Se restringe la lectura de la cola `pg_net`, que contiene temporalmente las cabeceras de la petición.
+
 Alertar por fallo de ejecución, reservas pendientes de más de 15 minutos o trabajos de eliminación pendientes de más de una hora. Revisar `asset_jobs.ultimo_error` e `intentos`; reintentar conserva el trabajo hasta confirmación del proveedor. Configurar la alerta mediante la plataforma operativa disponible; no hay una tarea externa creada en esta entrega.
 
 ## 7. Respaldos y restauración
@@ -104,4 +106,4 @@ Comprobar recuentos, cuentas, permisos, auditoría, informes y hashes; restaurar
 
 `npm run build` genera una compilación local. `npm run build:release` exige modo Supabase y configuración pública y rechaza nombres de secretos en variables `VITE_`. Vercel usa ese comando y `dist`, con CSP, cabeceras de seguridad y sin scripts CDN. Revisar orígenes CSP si se usa dominio Supabase personalizado u otro proveedor.
 
-El código se entrega en una rama de GitHub para revisión. La integración con `main` y el despliegue del sitio requieren completar la aceptación y coordinar la transición de los servicios. No se ha desplegado esta versión ni modificado la configuración real en esta entrega.
+La V2 está integrada en `main`. Para una instalación nueva o una transición adicional, coordinar los servicios y completar la aceptación antes de publicar. Los registros de despliegue y pendientes de cada cuenta deben conservarse en una bitácora privada; esta guía no sustituye esas verificaciones.

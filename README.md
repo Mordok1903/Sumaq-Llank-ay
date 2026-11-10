@@ -38,6 +38,8 @@ Para configurar las variables y resolver un despliegue fallido de Vercel, consul
 
 ## Estado de los servicios
 
-La publicación del código no despliega los servicios. Las migraciones y los cambios de configuración de las cuentas reales no se han aplicado en esta entrega. Sigue [los scripts de Supabase en orden](docs/SUPABASE_PASO_A_PASO.md) y el procedimiento de cambio coordinado antes de utilizar V2 en producción. Los informes internos sobre las cuentas reales permanecen fuera del repositorio público.
+La V2 está integrada en `main`. El acceso y la guía se publican en [el aplicativo](https://sumaq-llank-ay.vercel.app/pages/login.html). Para instalar en otro proyecto, sigue [los scripts de Supabase en orden](docs/SUPABASE_PASO_A_PASO.md) y [la configuración de Vercel](docs/VERCEL_PASO_A_PASO.md); publicar el código por sí solo no instala esos servicios.
+
+El mantenimiento periódico requiere la configuración administrativa adicional descrita en la guía. Los respaldos y su restauración deben comprobarse por separado. Los informes internos y el registro de configuración real permanecen fuera del repositorio público.
 
 La prueba local de interfaz no certifica una integración real con Supabase/Cloudinary. Esa comprobación debe realizarse en un proyecto de desarrollo antes del cambio coordinado de producción.
