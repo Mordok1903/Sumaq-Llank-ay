@@ -77,7 +77,7 @@ label {
   min-width: 0;
   font-size: 1rem;
 }
-input[type="file"] {
+input[type="file"]:not([hidden]) {
   display: block;
   width: 100%;
   max-width: 100%;

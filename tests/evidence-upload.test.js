@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { JSDOM } from "jsdom";
 
 async function screen(run, uploadImpl) {
@@ -175,6 +176,12 @@ test("cámara: foto y video usan sus selectores nativos y solo el video guarda e
   const timestamps = [];
   return screen(
     async ({ calls, select, submit, description, container }) => {
+      const style = document.createElement("style");
+      style.textContent = readFileSync(
+        new URL("../css/responsive.css", import.meta.url),
+        "utf8",
+      );
+      document.head.append(style);
       const frame = container.querySelector('input[type="number"]');
       assert.equal(frame.closest("[hidden]") !== null, true);
       for (const [label, accept, file] of [
@@ -182,6 +189,10 @@ test("cámara: foto y video usan sus selectores nativos y solo el video guarda e
         ["Grabar video", "video/*", video()],
       ]) {
         const source = container.querySelector(`input[aria-label="${label}"]`);
+        assert.equal(
+          document.defaultView.getComputedStyle(source).display,
+          "none",
+        );
         assert.equal(source.getAttribute("capture"), "environment");
         assert.equal(source.accept, accept);
         const button = [...container.querySelectorAll("button")].find(
